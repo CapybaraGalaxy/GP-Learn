@@ -38,6 +38,8 @@
             --surface: #121212;
             --surface-hover: #1c1c1e;
             --border: rgba(255, 255, 255, 0.08);
+            --scrollbar-track: #121212;
+            --scrollbar-thumb: #45454a;
             --text-main: #ffffff;
             --text-muted: #8e8e93;
             --accent: #ff453a;
@@ -54,6 +56,8 @@
             --surface: #ffffff;
             --surface-hover: #e5e5ea;
             --border: rgba(0, 0, 0, 0.08);
+            --scrollbar-track: #f2f2f7;
+            --scrollbar-thumb: #b8b8bf;
             --text-main: #000000;
             --text-muted: #6c6c70;
             --shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
@@ -65,6 +69,28 @@
             padding: 0;
             font-family: 'Outfit', sans-serif;
             -webkit-tap-highlight-color: transparent;
+            scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+            scrollbar-width: thin;
+        }
+
+        *::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        *::-webkit-scrollbar-track {
+            background: var(--scrollbar-track);
+            border-radius: 8px;
+        }
+
+        *::-webkit-scrollbar-thumb {
+            background: var(--scrollbar-thumb);
+            border: 2px solid var(--scrollbar-track);
+            border-radius: 8px;
+        }
+
+        *::-webkit-scrollbar-thumb:hover {
+            background: var(--accent);
         }
 
         body {
@@ -179,15 +205,6 @@
             display: flex;
             flex-direction: column;
             gap: 28px;
-        }
-
-        .main-content::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .main-content::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 3px;
         }
 
         .section-header {
@@ -671,10 +688,12 @@
             border-radius: 14px;
             padding: 4px;
             gap: 4px;
+            min-width: 0;
         }
 
         .segment-btn {
             flex: 1;
+            min-width: 0;
             background: transparent;
             border: none;
             color: var(--text-muted);
@@ -688,6 +707,18 @@
             justify-content: center;
             gap: 8px;
             transition: background 0.2s var(--bezier), color 0.2s var(--bezier);
+        }
+
+        @media (max-width: 420px) {
+            #view-mode-control .segment-btn {
+                flex-direction: column;
+                gap: 4px;
+                padding: 8px 4px;
+                font-size: 0.78rem;
+                line-height: 1.15;
+                white-space: normal;
+                text-align: center;
+            }
         }
 
         .segment-btn.active {
@@ -882,6 +913,59 @@
         .share-item-copy { min-width:0; flex:1; }
         .share-item-copy strong { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
         .share-item-copy span { display:block; margin-top:3px; color:var(--text-muted); font-size:.76rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        #share-modal .modal-content {
+            background: rgba(18, 18, 18, 0.88);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 40px rgba(0, 122, 255, 0.15);
+            padding: 28px;
+            border-radius: 36px;
+        }
+        [data-theme="light"] #share-modal .modal-content {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: rgba(0, 0, 0, 0.1);
+        }
+        .airdrop-hero { display:flex; flex-direction:column; align-items:center; text-align:center; position:relative; padding:10px 0 14px; }
+        .airdrop-close { position:absolute; top:-12px; right:-12px; width:36px; height:36px; border:1px solid var(--border); border-radius:50%; background:var(--surface-hover); color:var(--text-main); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+        .airdrop-radar { position:relative; width:86px; height:86px; display:flex; align-items:center; justify-content:center; margin:8px 0 16px; }
+        .airdrop-ring { position:absolute; border-radius:50%; border:1.5px solid var(--accent); opacity:0; animation:airdrop-pulse 2.8s infinite cubic-bezier(.215,.61,.355,1); pointer-events:none; }
+        .airdrop-ring:nth-child(1) { width:100%; height:100%; animation-delay:0s; }
+        .airdrop-ring:nth-child(2) { width:140%; height:140%; animation-delay:.8s; }
+        .airdrop-ring:nth-child(3) { width:180%; height:180%; animation-delay:1.6s; }
+        @keyframes airdrop-pulse { 0% { transform:scale(.4); opacity:.8; } 100% { transform:scale(1.2); opacity:0; } }
+        .airdrop-icon-center { width:64px; height:64px; border-radius:20px; background:var(--accent); display:flex; align-items:center; justify-content:center; color:#fff; box-shadow:0 10px 25px color-mix(in srgb,var(--accent) 40%,transparent); z-index:2; }
+        .airdrop-eyebrow { color:var(--text-muted); font-size:.78rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; }
+        .airdrop-title { font-size:1.35rem; font-weight:800; letter-spacing:-.02em; margin-top:4px; overflow-wrap:anywhere; }
+        .airdrop-subtitle { font-size:.86rem; color:var(--text-muted); margin-top:6px; max-width:320px; line-height:1.45; }
+        .airdrop-security-badge { background:rgba(255,149,0,.12); border:1px solid rgba(255,149,0,.3); color:#ff9500; padding:8px 14px; border-radius:100px; font-size:.78rem; font-weight:600; display:inline-flex; align-items:center; gap:6px; margin-top:12px; }
+        .airdrop-list-header { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:0 4px 8px; border-bottom:1px solid var(--border); margin-bottom:10px; }
+        .airdrop-list-header > span { font-size:.8rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted); }
+        .airdrop-actions-quick { display:flex; gap:6px; }
+        .airdrop-actions-quick button { background:none; border:0; color:var(--accent); font-size:.82rem; font-weight:700; cursor:pointer; padding:5px 6px; border-radius:6px; }
+        .airdrop-actions-quick button:hover { background:var(--surface-hover); }
+        .airdrop-item { position:relative; display:flex; align-items:center; gap:14px; padding:12px 14px; background:var(--bg); border:1px solid var(--border); border-radius:20px; cursor:pointer; transition:transform .2s var(--spring), border-color .2s var(--bezier), background .2s var(--bezier); animation:airdrop-item-in .4s var(--spring) both; }
+        .airdrop-item:hover { transform:translateY(-2px) scale(1.01); border-color:var(--accent); background:var(--surface-hover); }
+        .airdrop-item:focus-within { outline:2px solid var(--accent); outline-offset:2px; }
+        @keyframes airdrop-item-in { from { opacity:0; transform:translateY(12px) scale(.95); } to { opacity:1; transform:translateY(0) scale(1); } }
+        .airdrop-item-input { position:absolute; width:1px; height:1px; opacity:0; }
+        .airdrop-item-check { width:22px; height:22px; border-radius:50%; border:2px solid var(--border); display:flex; align-items:center; justify-content:center; color:transparent; transition:all .2s var(--spring); flex-shrink:0; }
+        .airdrop-item.selected .airdrop-item-check { background:var(--accent); border-color:var(--accent); color:#fff; transform:scale(1.1); }
+        .airdrop-item-icon { width:44px; height:44px; border-radius:14px; overflow:hidden; background:var(--surface-hover); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .airdrop-item-icon img { width:100%; height:100%; object-fit:cover; }
+        .airdrop-item-info { flex:1; min-width:0; }
+        .airdrop-item-title { font-size:.94rem; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .airdrop-item-desc { font-size:.78rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px; }
+        .airdrop-actions { margin-top:12px; gap:12px; }
+        .airdrop-actions .btn { border-radius:18px; }
+        @media (max-width:600px) {
+            #share-modal .modal-content { padding:24px 18px; border-radius:30px; }
+            .airdrop-actions .btn { padding:12px 8px; font-size:.88rem; }
+        }
+        @media (prefers-reduced-motion:reduce) {
+            .airdrop-ring, .airdrop-item { animation:none; }
+            .airdrop-item { opacity:1; }
+        }
         .manage-list { display:flex; flex-direction:column; gap:8px; max-height:42vh; overflow:auto; }
         .manage-row { display:flex; align-items:center; gap:10px; padding:10px; border:1px solid var(--border); background:var(--bg); border-radius:13px; }
         .manage-row input { accent-color:var(--accent); }
@@ -1001,7 +1085,7 @@
 
             <div class="settings-section">
                 <div class="settings-label">Modo de visualización</div>
-                <div class="segmented-control">
+                <div class="segmented-control" id="view-mode-control">
                     <button class="segment-btn" id="view-grid-btn" onclick="setViewMode('grid')">
                         <i data-lucide="grid" size="14"></i> Cuadrícula
                     </button>
@@ -1201,31 +1285,46 @@
         </div>
     </div>
 
-    <!-- Modal para Importar Colección / Herramienta Compartida -->
+    <!-- Modal AirDrop para importar colecciones y accesos compartidos -->
     <div class="modal-overlay" id="share-modal" onclick="closeModalOnOverlay(event, 'share-modal')">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title" id="share-modal-title">Acceso compartido recibido</div>
-                <button class="icon-btn" onclick="closeActiveModal('share-modal')" style="width: 32px; height: 32px;">
+        <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="share-collection-name">
+            <div class="airdrop-hero">
+                <button type="button" class="airdrop-close" aria-label="Cerrar" onclick="closeActiveModal('share-modal')">
                     <i data-lucide="x" size="16"></i>
                 </button>
+                <div class="airdrop-radar" aria-hidden="true">
+                    <div class="airdrop-ring"></div>
+                    <div class="airdrop-ring"></div>
+                    <div class="airdrop-ring"></div>
+                    <div class="airdrop-icon-center"><i data-lucide="share-2" size="30"></i></div>
+                </div>
+                <div class="airdrop-eyebrow" id="share-modal-title">Acceso compartido recibido</div>
+                <h2 class="airdrop-title" id="share-collection-name">Entrada recibida</h2>
+                <p class="airdrop-subtitle" id="share-modal-desc">Revisa los accesos antes de añadirlos. Solo se importarán los que marques.</p>
+                <div class="airdrop-security-badge">
+                    <i data-lucide="shield-check" size="14"></i> Tú eliges qué importar
+                </div>
             </div>
-            <div class="share-intro">
-                <div class="share-collection-name" id="share-collection-name"></div>
-                <p id="share-modal-desc">Revisa los accesos antes de añadirlos. Solo se importarán los que marques.</p>
-            </div>
+
             <div style="background:rgba(255,69,58,.12);border:1px solid var(--accent-danger);padding:12px 14px;border-radius:14px;font-size:.84rem;display:flex;align-items:flex-start;gap:10px;">
                 <i data-lucide="shield-alert" size="19" style="color:var(--accent-danger);flex-shrink:0;"></i>
                 <span><strong>Antes de continuar:</strong> recibir un enlace no verifica que sea seguro. Comprueba que conoces a quien lo envía y revisa los sitios seleccionados. No abriremos los enlaces durante la importación.</span>
             </div>
-            <div class="share-controls">
-                <strong id="share-selection-count">0 seleccionados</strong>
-                <div><button type="button" onclick="selectSharedItems(true)">Seleccionar todo</button><button type="button" onclick="selectSharedItems(false)">Nada</button></div>
+
+            <div>
+                <div class="airdrop-list-header">
+                    <span id="share-selection-count">0 seleccionados</span>
+                    <div class="airdrop-actions-quick">
+                        <button type="button" onclick="selectSharedItems(true)">Todo</button>
+                        <button type="button" onclick="selectSharedItems(false)">Ninguno</button>
+                    </div>
+                </div>
+                <div class="preset-list share-items-list" id="shared-items-preview"></div>
             </div>
-            <div class="preset-list share-items-list" id="shared-items-preview"></div>
-            <div class="modal-actions">
-                <button class="btn btn-secondary" onclick="closeActiveModal('share-modal')">Ignorar</button>
-                <button class="btn btn-primary" id="import-shared-btn" onclick="confirmImportShared()">Añadir seleccionados</button>
+
+            <div class="modal-actions airdrop-actions">
+                <button class="btn btn-secondary btn-full" onclick="closeActiveModal('share-modal')">Rechazar</button>
+                <button class="btn btn-primary btn-full" id="import-shared-btn" onclick="confirmImportShared()">Aceptar e Importar</button>
             </div>
         </div>
     </div>
@@ -1461,12 +1560,13 @@ const APP_VERSION = '1.0.0';
                         const previewContainer = document.getElementById('shared-items-preview');
                         if (previewContainer) {
                             previewContainer.innerHTML = pendingSharedItems.map((item, index) => `
-                                <label class="share-item" style="animation-delay:${Math.min(index * 45, 450)}ms">
-                                    <input type="checkbox" checked onchange="setSharedItemSelected(${index}, this.checked)" aria-label="Añadir ${escapeHtml(item.title || 'Recurso')}">
-                                    <span class="share-item-icon">${getSharedItemIconHtml(item)}</span>
-                                    <span class="share-item-copy">
-                                        <strong>${escapeHtml(item.title || 'Recurso sin título')}</strong>
-                                        <span>${escapeHtml(item.description || item.url || 'Sin descripción')}</span>
+                                <label class="airdrop-item selected" id="airdrop-item-${index}" style="animation-delay:${Math.min(index * 60, 480)}ms">
+                                    <input class="airdrop-item-input" type="checkbox" checked onchange="setSharedItemSelected(${index}, this.checked)" aria-label="Añadir ${escapeHtml(item.title || 'Recurso')}">
+                                    <span class="airdrop-item-check" aria-hidden="true"><i data-lucide="check" size="14"></i></span>
+                                    <span class="airdrop-item-icon">${getSharedItemIconHtml(item)}</span>
+                                    <span class="airdrop-item-info">
+                                        <span class="airdrop-item-title">${escapeHtml(item.title || 'Recurso sin título')}</span>
+                                        <span class="airdrop-item-desc">${escapeHtml(item.description || item.url || 'Sin descripción')}</span>
                                     </span>
                                 </label>
                             `).join('');
@@ -1556,12 +1656,16 @@ const APP_VERSION = '1.0.0';
 
         function setSharedItemSelected(index, selected) {
             selectedSharedItems[index] = selected;
+            document.getElementById(`airdrop-item-${index}`)?.classList.toggle('selected', selected);
             updateSharedSelection();
         }
 
         function selectSharedItems(selected) {
             selectedSharedItems = pendingSharedItems.map(() => selected);
-            document.querySelectorAll('#shared-items-preview input[type="checkbox"]').forEach(input => { input.checked = selected; });
+            document.querySelectorAll('#shared-items-preview input[type="checkbox"]').forEach((input, index) => {
+                input.checked = selected;
+                document.getElementById(`airdrop-item-${index}`)?.classList.toggle('selected', selected);
+            });
             updateSharedSelection();
         }
 
