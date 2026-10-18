@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso Libros (Modo LITE / Anti-errores)</title>
+    <style>
+        :root {
+            --bg: #000000;
+            --surface: #121212;
+            --surface-hover: #1c1c1e;
+            --border: rgba(255, 255, 255, 0.15);
+            --text-main: #ffffff;
+            --text-muted: #8e8e93;
+            --accent: #ff453a;
+            --accent-danger: #ff453a;
+            --accent-success: #34c759;
+            --star-color: #ffd60a;
+        }
+
+        [data-theme="light"] {
+            --bg: #f2f2f7;
+            --surface: #ffffff;
+            --surface-hover: #e5e5ea;
+            --border: rgba(0, 0, 0, 0.15);
+            --text-main: #000000;
+            --text-muted: #6c6c70;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 960px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .main-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+        }
+
+        .header-subtitle {
+            font-size: 0.8rem;
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .section-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .section-badge {
+            font-size: 0.75rem;
+            background: var(--surface-hover);
+            border: 1px solid var(--border);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .books-container.grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .books-container.list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .book-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            text-decoration: none;
+            color: var(--text-main);
+            position: relative;
+        }
+
+        .grid .book-card {
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .list .book-card {
+            flex-direction: row;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Anti-error Mode: Standard Text Placeholder replaces network images */
+        .book-text-placeholder {
+            width: 100%;
+            height: 60px;
+            background: var(--surface-hover);
+            border: 1px dashed var(--border);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: var(--text-main);
+            text-transform: uppercase;
+        }
+
+        .list .book-text-placeholder {
+            width: 44px;
+            height: 44px;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        .book-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            width: 100%;
+        }
+
+        .book-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+
+        .book-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .book-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 4px;
+        }
+
+        .tag-badge {
+            font-size: 0.68rem;
+            background: var(--surface-hover);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 1px 5px;
+            border-radius: 4px;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 4px;
+            margin-top: 6px;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.8rem;
+            background: var(--surface);
+            color: var(--text-main);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #ffffff;
+            border: none;
+        }
+
+        .btn-full {
+            width: 100%;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 16px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            width: 100%;
+            max-width: 440px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .input-group label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .input-group input, .input-group textarea, .input-group select {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 8px;
+            color: var(--text-main);
+            font-size: 0.9rem;
+        }
+
+        .preset-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .preset-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .search-bar {
+            width: 100%;
+            padding: 8px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-main);
+        }
+
+        .lite-notice {
+            background: var(--surface-hover);
+            border: 1px solid var(--border);
+            padding: 8px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <header>
+            <div>
+                <div class="main-title">Acceso Libros <small style="font-size:0.6em; color:var(--text-muted)">(LITE)</small></div>
+                <div class="header-subtitle">Modo Ultra-Ligero / Anti-Errores</div>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-primary" onclick="openAddModal()">+ Añadir</button>
+                <button class="btn" onclick="openModal('settings-modal')">Ajustes</button>
+            </div>
+        </header>
+
+        <div class="lite-notice">
+            ⚡ Modo LITE activo: imágenes online sustituidas por marcas de texto y funciones visuales pesadas reducidas al mínimo para máxima velocidad.
+        </div>
+
+        <input type="text" class="search-bar" placeholder="Buscar accesos..." oninput="handleSearch(this.value)">
+
+        <main class="main-content">
+            <div id="favorites-section" style="display: none;">
+                <div class="section-header">
+                    <div class="section-title">★ Favoritos</div>
+                    <span class="section-badge" id="fav-count">0</span>
+                </div>
+                <div class="books-container grid" id="favorites-container"></div>
+            </div>
+
+            <div id="all-resources-section">
+                <div class="section-header">
+                    <div class="section-title">Todos los Recursos</div>
+                    <span class="section-badge" id="all-count">0</span>
+                </div>
+                <div class="books-container grid" id="books-container"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Ajustes -->
+    <div class="modal-overlay" id="settings-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <strong>Ajustes LITE</strong>
+                <button class="btn" onclick="closeModal('settings-modal')">X</button>
+            </div>
+            <div class="input-group">
+                <label>Tema</label>
+                <select onchange="setTheme(this.value)">
+                    <option value="dark">Oscuro</option>
+                    <option value="light">Claro</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Vista</label>
+                <select onchange="setViewMode(this.value)">
+                    <option value="grid">Cuadrícula</option>
+                    <option value="list">Lista</option>
+                </select>
+            </div>
+            <button class="btn btn-full" onclick="downloadSettings()">Exportar Datos</button>
+            <button class="btn btn-full" onclick="document.getElementById('import-file').click()">Importar Datos</button>
+            <input type="file" id="import-file" style="display:none" onchange="importDataFromFile(event)">
+        </div>
+    </div>
+
+    <!-- Modal Añadir/Editar -->
+    <div class="modal-overlay" id="add-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <strong id="modal-title">Gestión de Acceso</strong>
+                <button class="btn" onclick="closeModal('add-modal')">X</button>
+            </div>
+
+            <div style="display:flex; gap:8px; margin-bottom: 8px;">
+                <button class="btn btn-full" onclick="showTab('presets')">Predefinidos</button>
+                <button class="btn btn-full" onclick="showTab('custom')">Personalizado</button>
+            </div>
+
+            <div id="tab-presets" class="preset-list"></div>
+
+            <div id="tab-custom" style="display:none; flex-direction:column; gap:8px;">
+                <div class="input-group">
+                    <label>Título</label>
+                    <input type="text" id="book-title-input">
+                </div>
+                <div class="input-group">
+                    <label>URL Web</label>
+                    <input type="url" id="book-url-input">
+                </div>
+                <div class="input-group">
+                    <label>Descripción</label>
+                    <textarea id="book-desc-input"></textarea>
+                </div>
+                <div class="input-group">
+                    <label>Etiquetas (separadas por coma)</label>
+                    <input type="text" id="book-tags-input">
+                </div>
+                <div style="display:flex; gap: 8px;">
+                    <label><input type="checkbox" id="book-fav-input"> Favorito</label>
+                    <label><input type="checkbox" id="book-pinned-input"> Fijar</label>
+                </div>
+                <button class="btn btn-primary btn-full" onclick="saveCustomBook()">Guardar Acceso</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const PRESET_BOOKS = [
+            { id: 'edelvives', title: 'Edelvives Digital Plus', url: 'https://edelvivesdigitalplus.com/home', description: 'Libros de texto virtuales de Edelvives', tags: ['Español', 'Esencial'] },
+            { id: 'mee', title: 'Macmillan Education', url: 'https://mee.macmillaneducation.com/courses/courselist', description: 'Material educativo digital de inglés', tags: ['Inglés', 'Esencial'] },
+            { id: 'blink', title: 'Blink', url: 'https://www.blinklearning.com/', description: 'Libros de texto virtuales de idiomas', tags: ['Francés', 'Alemán'] },
+            { id: 'tatum', title: 'Tatum', url: 'https://ta-tum.com/', description: 'Biblioteca digital gamificada', tags: ['Lectura'] },
+            { id: 'raz-plus', title: 'Raz-Plus', url: 'https://', description: 'Lectura nivelada en inglés y español.', tags: ['Lectura', 'Inglés'] },
+            { id: 'byme', title: 'ByME', url: 'https://digital.bilingualbyme.com/', description: 'Material de Ciencias Naturales y Sociales', tags: ['Inglés', 'Natural', 'Social'] },
+            { id: 'homescreen-neo', title: 'Herramientas', url: 'https://homescreen.guilleplayer.workers.dev/', description: 'Pantalla de inicio con herramientas útiles', tags: ['Homescreen'] }
+        ];
+
+        let appState = {
+            theme: 'dark',
+            viewMode: 'grid',
+            selectedPresets: ['edelvives', 'mee'],
+            customBooks: [],
+            favorites: [],
+            pinned: []
+        };
+
+        let editingBookId = null;
+        let searchQuery = '';
+
+        function init() {
+            const saved = localStorage.getItem('school_library_data');
+            if (saved) {
+                try { appState = { ...appState, ...JSON.parse(saved) }; } catch(e){}
+            }
+            setTheme(appState.theme);
+            renderApp();
+        }
+
+        function saveData() {
+            localStorage.setItem('school_library_data', JSON.stringify(appState));
+        }
+
+        function setTheme(theme) {
+            appState.theme = theme;
+            document.documentElement.setAttribute('data-theme', theme);
+            saveData();
+        }
+
+        function setViewMode(mode) {
+            appState.viewMode = mode;
+            document.getElementById('books-container').className = `books-container ${mode}`;
+            document.getElementById('favorites-container').className = `books-container ${mode}`;
+            saveData();
+            renderApp();
+        }
+
+        function handleSearch(q) {
+            searchQuery = q.toLowerCase().trim();
+            renderApp();
+        }
+
+        function toggleFavorite(id) {
+            appState.favorites = appState.favorites.includes(id) 
+                ? appState.favorites.filter(i => i !== id) 
+                : [...appState.favorites, id];
+            saveData();
+            renderApp();
+        }
+
+        function togglePin(id) {
+            appState.pinned = appState.pinned.includes(id) 
+                ? appState.pinned.filter(i => i !== id) 
+                : [...appState.pinned, id];
+            saveData();
+            renderApp();
+        }
+
+        function getAllResources() {
+            const presets = PRESET_BOOKS.filter(b => appState.selectedPresets.includes(b.id)).map(b => ({...b, isDefault: true}));
+            return [...presets, ...appState.customBooks];
+        }
+
+        function renderApp() {
+            const container = document.getElementById('books-container');
+            const favContainer = document.getElementById('favorites-container');
+            const favSection = document.getElementById('favorites-section');
+
+            container.innerHTML = '';
+            favContainer.innerHTML = '';
+
+            let list = getAllResources();
+            if (searchQuery) {
+                list = list.filter(b => b.title.toLowerCase().includes(searchQuery) || (b.description||'').toLowerCase().includes(searchQuery));
+            }
+
+            const pinned = list.filter(r => appState.pinned.includes(r.id));
+            const regular = list.filter(r => !appState.pinned.includes(r.id));
+            const sorted = [...pinned, ...regular];
+
+            const favs = sorted.filter(r => appState.favorites.includes(r.id));
+
+            document.getElementById('fav-count').textContent = favs.length;
+            document.getElementById('all-count').textContent = sorted.length;
+
+            if (favs.length > 0 && !searchQuery) {
+                favSection.style.display = 'block';
+                favs.forEach(b => favContainer.appendChild(createCard(b)));
+            } else {
+                favSection.style.display = 'none';
+            }
+
+            sorted.forEach(b => container.appendChild(createCard(b)));
+        }
+
+        function createCard(book) {
+            const isFav = appState.favorites.includes(book.id);
+            const isPinned = appState.pinned.includes(book.id);
+            const initial = book.title.charAt(0).toUpperCase();
+
+            const card = document.createElement('div');
+            card.className = 'book-card';
+
+            const tagsHtml = (book.tags && book.tags.length > 0)
+                ? `<div class="book-tags">${book.tags.map(t => `<span class="tag-badge">${t}</span>`).join('')}</div>`
+                : '';
+
+            card.innerHTML = `
+                <!-- Anti-Error Placeholder replacing external image fetches -->
+                <div class="book-text-placeholder">${initial}</div>
+                <div class="book-info">
+                    <div class="book-title"><a href="${book.url}" target="_blank" style="color:inherit; text-decoration:none;">${book.title}</a> ${isPinned ? '📌' : ''}</div>
+                    <div class="book-desc">${book.description || ''}</div>
+                    ${tagsHtml}
+                    <div class="card-actions">
+                        <button class="btn" onclick="toggleFavorite('${book.id}')">${isFav ? '★ Quitar' : '☆ Favorito'}</button>
+                        <button class="btn" onclick="togglePin('${book.id}')">${isPinned ? 'Desfijar' : 'Fijar'}</button>
+                        ${!book.isDefault ? `<button class="btn" onclick="deleteCustomBook('${book.id}')">Eliminar</button>` : ''}
+                    </div>
+                </div>
+            `;
+            return card;
+        }
+
+        function openAddModal() {
+            renderPresetsList();
+            openModal('add-modal');
+        }
+
+        function showTab(tab) {
+            document.getElementById('tab-presets').style.display = tab === 'presets' ? 'flex' : 'none';
+            document.getElementById('tab-custom').style.display = tab === 'custom' ? 'flex' : 'none';
+        }
+
+        function renderPresetsList() {
+            const pContainer = document.getElementById('tab-presets');
+            pContainer.innerHTML = '';
+            PRESET_BOOKS.forEach(b => {
+                const checked = appState.selectedPresets.includes(b.id);
+                const item = document.createElement('div');
+                item.className = 'preset-item';
+                item.innerHTML = `
+                    <div>
+                        <strong>${b.title}</strong>
+                        <div style="font-size:0.75rem; color:var(--text-muted);">${b.description}</div>
+                    </div>
+                    <input type="checkbox" ${checked ? 'checked' : ''} onchange="togglePreset('${b.id}', this.checked)">
+                `;
+                pContainer.appendChild(item);
+            });
+        }
+
+        function togglePreset(id, isSelected) {
+            if (isSelected) {
+                if (!appState.selectedPresets.includes(id)) appState.selectedPresets.push(id);
+            } else {
+                appState.selectedPresets = appState.selectedPresets.filter(i => i !== id);
+            }
+            saveData();
+            renderApp();
+        }
+
+        function saveCustomBook() {
+            const title = document.getElementById('book-title-input').value.trim();
+            const url = document.getElementById('book-url-input').value.trim();
+            if (!title || !url) return;
+
+            const newBook = {
+                id: 'custom-' + Date.now(),
+                title,
+                url,
+                description: document.getElementById('book-desc-input').value.trim(),
+                tags: document.getElementById('book-tags-input').value.split(',').map(t => t.trim()).filter(Boolean),
+                isDefault: false
+            };
+
+            appState.customBooks.push(newBook);
+            if (document.getElementById('book-fav-input').checked) appState.favorites.push(newBook.id);
+            if (document.getElementById('book-pinned-input').checked) appState.pinned.push(newBook.id);
+
+            saveData();
+            renderApp();
+            closeModal('add-modal');
+        }
+
+        function deleteCustomBook(id) {
+            appState.customBooks = appState.customBooks.filter(b => b.id !== id);
+            appState.favorites = appState.favorites.filter(i => i !== id);
+            appState.pinned = appState.pinned.filter(i => i !== id);
+            saveData();
+            renderApp();
+        }
+
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        function downloadSettings() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState));
+            const a = document.createElement('a');
+            a.setAttribute("href", dataStr);
+            a.setAttribute("download", "acceso_libros_backup_lite.json");
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        }
+
+        function importDataFromFile(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    appState = JSON.parse(evt.target.result);
+                    saveData();
+                    renderApp();
+                    closeModal('settings-modal');
+                } catch(_) {}
+            };
+            reader.readAsText(file);
+        }
+
+        init();
+    </script>
+</body>
+</html>

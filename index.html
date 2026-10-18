@@ -31,7 +31,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="assets/js/lucide.min.js"></script>
     <style>
         :root {
             --bg: #000000;
@@ -1063,6 +1063,10 @@
                 <button class="btn btn-secondary btn-full" onclick="openModal('trash-modal'); renderTrash()">
                     <i data-lucide="trash-2" size="16"></i> Papelera <span id="trash-count"></span>
                 </button>
+                <button class="btn btn-secondary btn-full" onclick="window.location.href='fallback.html'">
+                <i data-lucide="zap" size="16"></i> Modo LITE <span id="trash-count"></span>
+                </button>
+
                 <div class="settings-label" style="margin-top:6px;">Recibimientos recientes</div>
                 <div class="settings-scroll" id="received-history"></div>
                 <div class="row-group">
@@ -1347,9 +1351,21 @@ const PRESET_BOOKS = [
             density: 'normal'
         };
 
-        const APP_VERSION = '2.0.0';
+const APP_VERSION = '1.0.0';
         const APP_CHANGELOG = [
-            { version:'1.0.0', date:'2026-10-05', changes:['x','x','x','x','x','x','x'] }
+            { 
+                version: '1.0.0', 
+                date: '2026-10-05', 
+                changes: [
+                    'Lanzamiento oficial de la plataforma de acceso a libros y recursos educativos.',
+                    'Gestión completa de accesos predefinidos y creación de recursos personalizados.',
+                    'Modos de tema claro y oscuro, con opciones de densidad y color de énfasis.',
+                    'Múltiples opciones de visualización (cuadrícula, lista y formato compacto).',
+                    'Buscador flotante en tiempo real, administración de favoritos y elementos fijados.',
+                    'Herramientas avanzadas de copia de seguridad (importar/exportar) y papelera de reciclaje.',
+                    'Incorporación del nuevo Modo LITE de alta velocidad y sin errores, disponible desde los ajustes.'
+                ] 
+            }
         ];
 
         let editingBookId = null;
@@ -2471,6 +2487,9 @@ const PRESET_BOOKS = [
         }
 
         window.onload = init;
+    </script>
+    <script>
+        lucide.createIcons();
     </script>
 </body>
 </html>
