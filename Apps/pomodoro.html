@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Aura Focus — Pomodoro</title>
+    
+    <!-- 1. Script de Inicialización Crítica (head) -->
+    <script>
+        (() => {
+            try {
+                const saved = JSON.parse(localStorage.getItem("school_library_data") || "null");
+                const theme = saved?.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+                const density = saved?.density || "normal";
+                document.documentElement.dataset.theme = theme;
+                document.documentElement.dataset.density = density;
+                if (saved?.accent) {
+                    document.documentElement.style.setProperty("--accent", saved.accent);
+                }
+            } catch (_) {}
+        })();
+    </script>
+
+    <!-- 2. Tipografía y Recursos Externos -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- 3. Variables y Estilos Globale/Ecosistema -->
+    <style>
+        :root {
+            --bg: #000000;
+            --surface: #121212;
+            --surface-hover: #1c1c1e;
+            --border: rgba(255, 255, 255, 0.08);
+            --border-strong: rgba(255, 255, 255, 0.14);
+            --scrollbar-track: #121212;
+            --scrollbar-thumb: #45454a;
+            --text-main: #ffffff;
+            --text-muted: #8e8e93;
+            --text-body: #d1d1d6;
+            --accent: #ff453a;
+            --accent-danger: #ff453a;
+            --accent-success: #34c759;
+            --star-color: #ffd60a;
+            --shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+            --bezier: cubic-bezier(0.16, 1, 0.3, 1);
+            --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        [data-theme="light"] {
+            --bg: #f2f2f7;
+            --surface: #ffffff;
+            --surface-hover: #e5e5ea;
+            --border: rgba(0, 0, 0, 0.08);
+            --border-strong: rgba(0, 0, 0, 0.14);
+            --scrollbar-track: #f2f2f7;
+            --scrollbar-thumb: #b8b8bf;
+            --text-main: #000000;
+            --text-muted: #6c6c70;
+            --text-body: #3a3a3c;
+            --shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Capa de Fondo - Progress Bar Fluida */
+        .background-progress-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .background-progress-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 0%;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.02), var(--accent));
+            opacity: 0.18;
+            transition: width 1s linear;
+        }
+
+        .background-ambient-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60vw;
+            height: 60vw;
+            max-width: 600px;
+            max-height: 600px;
+            background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
+            opacity: 0.12;
+            filter: blur(80px);
+            transition: opacity 1s var(--bezier), background 0.5s var(--bezier);
+            z-index: 0;
+        }
+
+        /* Contenedor Principal App */
+        .app-container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 960px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: calc(16px + env(safe-area-inset-top)) 24px calc(24px + env(safe-area-inset-bottom));
+            transition: opacity 0.5s var(--bezier);
+        }
+
+        /* Cabecera Estándar */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .app-icon-badge {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            box-shadow: var(--shadow);
+        }
+
+        .header-titles .main-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-main);
+            line-height: 1.2;
+        }
+
+        .header-titles .header-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            min-width: 44px;
+            min-height: 44px;
+            border-radius: 14px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s var(--bezier);
+        }
+
+        .icon-btn:hover {
+            background: var(--surface-hover);
+            border-color: var(--border-strong);
+            transform: translateY(-2px);
+        }
+
+        .icon-btn.active {
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* Zona Central - Timer */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            gap: 24px;
+            text-align: center;
+        }
+
+        /* Controles Segmentados */
+        .segmented-control {
+            display: flex;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 4px;
+            border-radius: 18px;
+            gap: 4px;
+            box-shadow: var(--shadow);
+        }
+
+        .segment-btn {
+            padding: 8px 18px;
+            border-radius: 14px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.25s var(--bezier);
+            min-height: 40px;
+        }
+
+        .segment-btn.active {
+            background: var(--surface-hover);
+            color: var(--text-main);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        /* Visualización de Tiempo */
+        .timer-display {
+            font-size: clamp(5rem, 18vw, 10.5rem);
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+            color: var(--text-main);
+            user-select: none;
+            transition: transform 0.3s var(--spring);
+        }
+
+        .timer-task-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            font-size: 0.9rem;
+            color: var(--text-body);
+            max-width: 80%;
+            cursor: pointer;
+            transition: all 0.2s var(--bezier);
+        }
+
+        .timer-task-indicator:hover {
+            border-color: var(--border-strong);
+            transform: translateY(-2px);
+        }
+
+        /* Botones de Control */
+        .timer-controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .btn-primary {
+            min-width: 140px;
+            height: 56px;
+            border-radius: 28px;
+            background: var(--text-main);
+            color: var(--bg);
+            border: none;
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            transition: all 0.25s var(--spring);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px) scale(1.02);
+            opacity: 0.95;
+        }
+
+        .btn-secondary {
+            width: 56px;
+            height: 56px;
+            border-radius: 28px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s var(--bezier);
+        }
+
+        .btn-secondary:hover {
+            background: var(--surface-hover);
+            border-color: var(--border-strong);
+            transform: translateY(-2px);
+        }
+
+        /* Modales */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s var(--bezier);
+            padding: 20px;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            background: var(--surface);
+            border: 1px solid var(--border-strong);
+            border-radius: 24px;
+            width: 100%;
+            max-width: 440px;
+            padding: 28px;
+            box-shadow: var(--shadow);
+            transform: scale(0.92) translateY(10px);
+            transition: transform 0.3s var(--spring);
+        }
+
+        .modal-overlay.open .modal-card {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-input {
+            width: 100%;
+            height: 48px;
+            border-radius: 14px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 0 16px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: var(--accent);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        /* Notificación Flotante / Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--surface);
+            border: 1px solid var(--border-strong);
+            color: var(--text-main);
+            padding: 12px 24px;
+            border-radius: 30px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            opacity: 0;
+            transition: all 0.4s var(--spring);
+            z-index: 200;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* Modo Zen (Hide UI) */
+        body.zen-mode .app-container {
+            opacity: 0.15;
+        }
+
+        body.zen-mode .app-container:hover {
+            opacity: 1;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, .timer-display, .modal-card, .background-progress-fill {
+                transition: none !important;
+                animation: none !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .app-container {
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+            .timer-controls {
+                width: 100%;
+                justify-content: center;
+            }
+            .btn-primary {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Fondo Dinámico como Progress Bar -->
+    <div class="background-progress-container">
+        <div class="background-progress-fill" id="bg-progress"></div>
+    </div>
+    <div class="background-ambient-glow" id="bg-glow"></div>
+
+    <!-- Layout Principal -->
+    <div class="app-container">
+        <header>
+            <div class="header-left">
+                <div class="app-icon-badge">
+                    <i data-lucide="timer" size="24"></i>
+                </div>
+                <div class="header-titles">
+                    <div class="main-title">Aura Focus</div>
+                    <div class="header-subtitle">Ecosistema Acceso Libros</div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="icon-btn" id="sound-toggle-btn" title="Ruido Blanco de Fondo" onclick="toggleWhiteNoise()">
+                    <i data-lucide="volume-x" size="20"></i>
+                </button>
+                <button class="icon-btn" title="Compartir Configuración" onclick="shareConfiguration()">
+                    <i data-lucide="share-2" size="20"></i>
+                </button>
+                <button class="icon-btn" title="Ajustes" onclick="openModal('settings-modal')">
+                    <i data-lucide="settings" size="20"></i>
+                </button>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <!-- Modos Segmentados -->
+            <div class="segmented-control">
+                <button class="segment-btn active" onclick="setMode('work')">Enfoque</button>
+                <button class="segment-btn" onclick="setMode('shortBreak')">Descanso Corto</button>
+                <button class="segment-btn" onclick="setMode('longBreak')">Descanso Largo</button>
+            </div>
+
+            <!-- Contador -->
+            <div class="timer-display" id="timer-display">25:00</div>
+
+            <!-- Tarea Activa -->
+            <div class="timer-task-indicator" onclick="openModal('task-modal')">
+                <i data-lucide="check-circle-2" size="16"></i>
+                <span id="current-task-label">Seleccionar o escribir tarea...</span>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="timer-controls">
+                <button class="btn-secondary" title="Reiniciar" onclick="resetTimer()">
+                    <i data-lucide="rotate-ccw" size="20"></i>
+                </button>
+                <button class="btn-primary" id="start-btn" onclick="toggleTimer()">
+                    <i data-lucide="play" size="22" id="start-icon"></i>
+                    <span id="start-text">Iniciar</span>
+                </button>
+                <button class="btn-secondary" title="Modo Zen" onclick="toggleZen()">
+                    <i data-lucide="maximize-2" size="20"></i>
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal de Ajustes -->
+    <div class="modal-overlay" id="settings-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title">Ajustes de Tiempo</div>
+                <button class="icon-btn" onclick="closeModal('settings-modal')">
+                    <i data-lucide="x" size="18"></i>
+                </button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Duración (Minutos)</label>
+                <div class="form-grid">
+                    <div>
+                        <label class="form-label" style="font-size: 0.75rem;">Enfoque</label>
+                        <input type="number" id="input-work" class="form-input" value="25" min="1" max="120">
+                    </div>
+                    <div>
+                        <label class="form-label" style="font-size: 0.75rem;">D. Corto</label>
+                        <input type="number" id="input-short" class="form-input" value="5" min="1" max="60">
+                    </div>
+                    <div>
+                        <label class="form-label" style="font-size: 0.75rem;">D. Largo</label>
+                        <input type="number" id="input-long" class="form-input" value="15" min="1" max="60">
+                    </div>
+                </div>
+            </div>
+            <button class="btn-primary" style="width: 100%; margin-top: 10px;" onclick="saveSettings()">Guardar Cambios</button>
+        </div>
+    </div>
+
+    <!-- Modal de Tarea -->
+    <div class="modal-overlay" id="task-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title">Tarea de la Sesión</div>
+                <button class="icon-btn" onclick="closeModal('task-modal')">
+                    <i data-lucide="x" size="18"></i>
+                </button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">¿En qué vas a trabajar?</label>
+                <input type="text" id="task-input" class="form-input" placeholder="Ej. Lectura de Capítulo 3, Escribir informe..." maxlength="60">
+            </div>
+            <button class="btn-primary" style="width: 100%;" onclick="saveTask()">Establecer Tarea</button>
+        </div>
+    </div>
+
+    <!-- Toast de Notificación -->
+    <div class="toast" id="toast">
+        <i data-lucide="info" size="18" style="color: var(--accent);"></i>
+        <span id="toast-text">Notificación</span>
+    </div>
+
+    <!-- Lógica JavaScript -->
+    <script>
+        // --- Estado de la Aplicación ---
+        let config = {
+            work: 25,
+            shortBreak: 5,
+            longBreak: 15
+        };
+        let currentMode = 'work'; // 'work', 'shortBreak', 'longBreak'
+        let timeLeft = config.work * 60;
+        let totalTime = config.work * 60;
+        let isRunning = false;
+        let timerId = null;
+        let currentTask = '';
+        let noiseActive = false;
+
+        // Web Audio API para Sonidos Sintetizados Nativos (Zero externas)
+        let audioCtx = null;
+        let noiseNode = null;
+
+        // --- Inicialización ---
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            checkUrlShareData();
+            loadState();
+            updateDisplay();
+        });
+
+        // --- Motor del Temporizador ---
+        function toggleTimer() {
+            if (isRunning) {
+                pauseTimer();
+            } else {
+                startTimer();
+            }
+        }
+
+        function startTimer() {
+            if (isRunning) return;
+            isRunning = true;
+            document.getElementById('start-text').textContent = 'Pausar';
+            document.getElementById('start-icon').setAttribute('data-lucide', 'pause');
+            lucide.createIcons();
+
+            timerId = setInterval(() => {
+                if (timeLeft > 0) {
+                    timeLeft--;
+                    updateDisplay();
+                } else {
+                    completeSession();
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            isRunning = false;
+            clearInterval(timerId);
+            document.getElementById('start-text').textContent = 'Continuar';
+            document.getElementById('start-icon').setAttribute('data-lucide', 'play');
+            lucide.createIcons();
+        }
+
+        function resetTimer() {
+            pauseTimer();
+            timeLeft = config[currentMode] * 60;
+            totalTime = timeLeft;
+            document.getElementById('start-text').textContent = 'Iniciar';
+            updateDisplay();
+        }
+
+        function setMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.segment-btn').forEach((btn, idx) => {
+                btn.classList.toggle('active', 
+                    (mode === 'work' && idx === 0) || 
+                    (mode === 'shortBreak' && idx === 1) || 
+                    (mode === 'longBreak' && idx === 2)
+                );
+            });
+            resetTimer();
+        }
+
+        function updateDisplay() {
+            const mins = Math.floor(timeLeft / 60);
+            const secs = timeLeft % 60;
+            const formatted = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            
+            document.getElementById('timer-display').textContent = formatted;
+            document.title = `${formatted} — ${currentMode === 'work' ? 'Enfoque' : 'Descanso'}`;
+
+            // Actualización del Fondo como Progress Bar
+            const percentage = ((totalTime - timeLeft) / totalTime) * 100;
+            document.getElementById('bg-progress').style.width = `${percentage}%`;
+        }
+
+        function completeSession() {
+            pauseTimer();
+            playChimeSound();
+            showToast(currentMode === 'work' ? '¡Sesión de enfoque completada!' : 'Tiempo de descanso finalizado');
+            
+            if (currentMode === 'work') {
+                setMode('shortBreak');
+            } else {
+                setMode('work');
+            }
+        }
+
+        // --- Gestión de Tareas ---
+        function saveTask() {
+            const val = document.getElementById('task-input').value.trim();
+            currentTask = val;
+            document.getElementById('current-task-label').textContent = val || 'Seleccionar o escribir tarea...';
+            closeModal('task-modal');
+        }
+
+        // --- Ajustes ---
+        function saveSettings() {
+            const w = parseInt(document.getElementById('input-work').value) || 25;
+            const s = parseInt(document.getElementById('input-short').value) || 5;
+            const l = parseInt(document.getElementById('input-long').value) || 15;
+
+            config = { work: w, shortBreak: s, longBreak: l };
+            saveState();
+            closeModal('settings-modal');
+            resetTimer();
+            showToast("Ajustes guardados");
+        }
+
+        function openModal(id) {
+            document.getElementById(id).classList.add('open');
+            window.history.pushState({ modalOpen: id }, '');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('open');
+        }
+
+        window.addEventListener('popstate', (e) => {
+            document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+        });
+
+        // --- Sistema de Audio Sintetizado (Satin/Chime + Brown Noise) ---
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playChimeSound() {
+            initAudio();
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(523.25, now); // C5
+            osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.3); // E5
+
+            gain.gain.setValueAtTime(0.3, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start(now);
+            osc.stop(now + 1.5);
+        }
+
+        function toggleWhiteNoise() {
+            initAudio();
+            const btn = document.getElementById('sound-toggle-btn');
+            
+            if (noiseActive) {
+                if (noiseNode) noiseNode.disconnect();
+                noiseActive = false;
+                btn.classList.remove('active');
+                showToast("Sonido de fondo desactivado");
+            } else {
+                const bufferSize = audioCtx.sampleRate * 2;
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                let lastOut = 0.0;
+                
+                // Generar Ruido Marrón suave
+                for (let i = 0; i < bufferSize; i++) {
+                    const white = Math.random() * 2 - 1;
+                    data[i] = (lastOut + (0.02 * white)) / 1.02;
+                    lastOut = data[i];
+                    data[i] *= 3.5;
+                }
+
+                noiseNode = audioCtx.createBufferSource();
+                noiseNode.buffer = buffer;
+                noiseNode.loop = true;
+
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.value = 400;
+
+                const gain = audioCtx.createGain();
+                gain.gain.value = 0.05;
+
+                noiseNode.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                noiseNode.start();
+                noiseActive = true;
+                btn.classList.add('active');
+                showToast("Ruido ambiental activo");
+            }
+        }
+
+        function toggleZen() {
+            document.body.classList.toggle('zen-mode');
+        }
+
+        // --- Patrón #share= Import / Export ---
+        function checkUrlShareData() {
+            const hash = window.location.hash;
+            if (hash.startsWith('#share=')) {
+                try {
+                    const encoded = hash.replace('#share=', '');
+                    const jsonString = decodeURIComponent(escape(atob(encoded)));
+                    const shareData = JSON.parse(jsonString);
+                    if (shareData && shareData.config) {
+                        config = shareData.config;
+                        if (shareData.task) {
+                            currentTask = shareData.task;
+                            document.getElementById('current-task-label').textContent = currentTask;
+                        }
+                        saveState();
+                        showToast("Rutina importada correctamente");
+                    }
+                } catch (e) {
+                    console.error("Error al decodificar enlace compartido", e);
+                }
+            }
+        }
+
+        function shareConfiguration() {
+            const payload = { config, task: currentTask };
+            const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+            const url = `${window.location.origin}${window.location.pathname}#share=${encoded}`;
+            
+            navigator.clipboard.writeText(url).then(() => {
+                showToast("Enlace de rutina copiado al portapapeles");
+            });
+        }
+
+        // --- Persistencia ---
+        function saveState() {
+            localStorage.setItem('aura_pomodoro_config', JSON.stringify(config));
+        }
+
+        function loadState() {
+            const saved = localStorage.getItem('aura_pomodoro_config');
+            if (saved) {
+                try {
+                    config = JSON.parse(saved);
+                    document.getElementById('input-work').value = config.work;
+                    document.getElementById('input-short').value = config.shortBreak;
+                    document.getElementById('input-long').value = config.longBreak;
+                    timeLeft = config.work * 60;
+                    totalTime = timeLeft;
+                } catch (_) {}
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-text').textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+    </script>
+</body>
+</html>
