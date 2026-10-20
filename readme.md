@@ -1,6 +1,6 @@
-# Acceso Libros
+# GP Learn
 
-**Acceso Libros** es una biblioteca digital personal para reunir en un mismo lugar libros, bibliotecas digitales, recursos educativos y otras herramientas útiles para estudiantes y lectores.
+**GP Learn** es una biblioteca digital personal para reunir en un mismo lugar libros, bibliotecas digitales, recursos educativos y otras herramientas útiles para estudiantes y lectores.
 
 El proyecto está pensado para ser simple, rápido y completamente gestionable desde el navegador, sin necesidad de una cuenta ni de un servidor propio. La información personal de la biblioteca se guarda localmente en el dispositivo.
 
@@ -35,7 +35,7 @@ También se puede modificar la densidad general de la interfaz:
 * Cómoda
 
 ### 🎨 Personalización
-Acceso Libros permite adaptar la interfaz a las preferencias de cada usuario:
+GP Learn permite adaptar la interfaz a las preferencias de cada usuario:
 * Modo oscuro.
 * Modo claro.
 * Diferentes colores de acento.
@@ -45,7 +45,7 @@ Acceso Libros permite adaptar la interfaz a las preferencias de cada usuario:
 ### 🔗 Compartir recursos
 Una de las funciones principales del proyecto es poder compartir accesos sin necesitar una base de datos.
 
-Los datos del recurso se pueden codificar directamente dentro de la URL mediante un fragmento `#share=...`. Al abrir el enlace, Acceso Libros puede detectar los datos compartidos y permitir al usuario revisarlos antes de importarlos.
+Los datos del recurso se pueden codificar directamente dentro de la URL mediante un fragmento `#share=...`. Al abrir el enlace, GP Learn puede detectar los datos compartidos y permitir al usuario revisarlos antes de importarlos.
 
 Esto permite compartir:
 * Un recurso individual.
@@ -85,20 +85,20 @@ Entre sus funciones se incluyen:
 * Importar presets.
 * Exportar los presets como `preset-books.js`.
 
-Los presets también se guardan localmente en el navegador mientras se trabaja con el editor. Esto facilita mantener la colección inicial de Acceso Libros sin tener que editar manualmente grandes bloques de código.
+Los presets también se guardan localmente en el navegador mientras se trabaja con el editor. Esto facilita mantener la colección inicial de GP Learn sin tener que editar manualmente grandes bloques de código.
 
 ### 💡 Sección de consejos
 El proyecto también incluye una sección independiente de ayuda:
 
 `Media/consejos.html`
 
-Esta página reúne recomendaciones y pequeñas guías para sacar más partido a la biblioteca. Está integrada visualmente con Acceso Libros y comparte algunas preferencias con la aplicación principal, como el tema y el color de acento.
+Esta página reúne recomendaciones y pequeñas guías para sacar más partido a la biblioteca. Está integrada visualmente con GP Learn y comparte algunas preferencias con la aplicación principal, como el tema y el color de acento.
 
 ---
 
 ## 💾 Almacenamiento y privacidad
 
-Acceso Libros funciona principalmente de forma local. Los datos creados por el usuario, como:
+GP Learn funciona principalmente de forma local. Los datos creados por el usuario, como:
 * recursos personalizados,
 * favoritos,
 * elementos fijados,
@@ -117,7 +117,7 @@ Los enlaces compartidos mediante `#share=` contienen los datos necesarios para r
 
 ## 🛠️ Tecnologías utilizadas
 
-Acceso Libros está construido principalmente con tecnologías web estándar:
+GP Learn está construido principalmente con tecnologías web estándar:
 * HTML5
 * CSS3
 * JavaScript
@@ -141,7 +141,7 @@ acceso-libros/
     ├── consejos.html
     └── preset-editor.html
 ```
-​* **`index.html`**: Aplicación principal de Acceso Libros. Contiene la interfaz, estilos y lógica necesaria para gestionar la biblioteca.
+​* **`index.html`**: Aplicación principal de GP Learn. Contiene la interfaz, estilos y lógica necesaria para gestionar la biblioteca.
 * **`Media/preset-editor.html`**: Editor visual utilizado para crear y mantener los presets de recursos.
 * **`Media/consejos.html`**: Página de consejos y documentación para los usuarios de la aplicación.
 
@@ -149,7 +149,7 @@ acceso-libros/
 
 ## 🚀 Uso
 
-No es necesario instalar dependencias para utilizar Acceso Libros. Puedes abrir `index.html` directamente en un navegador compatible o servir el proyecto desde cualquier servidor web estático.
+No es necesario instalar dependencias para utilizar GP Learn. Puedes abrir `index.html` directamente en un navegador compatible o servir el proyecto desde cualquier servidor web estático.
 
 Al tratarse de una aplicación basada en tecnologías web estándar, también puede alojarse fácilmente en servicios como GitHub Pages.
 
@@ -157,7 +157,7 @@ Al tratarse de una aplicación basada en tecnologías web estándar, también pu
 
 ## 🤖 Uso de inteligencia artificial
 
-Durante el desarrollo de Acceso Libros se han utilizado herramientas de inteligencia artificial como apoyo para programación, diseño, generación de ideas, depuración y desarrollo de determinadas partes del proyecto.
+Durante el desarrollo de GP Learn se han utilizado herramientas de inteligencia artificial como apoyo para programación, diseño, generación de ideas, depuración y desarrollo de determinadas partes del proyecto.
 
 La IA forma parte del proceso de desarrollo, pero el proyecto, su estructura, selección de funcionalidades, diseño final, configuración y decisiones de implementación han sido revisados y adaptados durante su desarrollo.
 
@@ -167,11 +167,11 @@ Este repositorio no pretende presentar el proyecto como si hubiera sido desarrol
 
 ## 🖼️ Imágenes, logotipos y contenido de terceros
 
-Acceso Libros utiliza algunos recursos visuales externos, incluyendo imágenes, logotipos, iconos o material asociado a servicios y marcas enlazados desde la aplicación.
+GP Learn utiliza algunos recursos visuales externos, incluyendo imágenes, logotipos, iconos o material asociado a servicios y marcas enlazados desde la aplicación.
 
-* Estos materiales **no son propiedad del autor** de Acceso Libros.
+* Estos materiales **no son propiedad del autor** de GP Learn.
 * Los nombres comerciales, marcas, logotipos e imágenes pertenecen a sus respectivos propietarios. Su presencia dentro de la aplicación sirve únicamente para identificar los servicios o recursos externos a los que se enlaza.
-* En particular, el hecho de que un servicio aparezca como recurso dentro de Acceso Libros **no implica afiliación, patrocinio, autorización ni relación oficial** con dicho servicio.
+* En particular, el hecho de que un servicio aparezca como recurso dentro de GP Learn **no implica afiliación, patrocinio, autorización ni relación oficial** con dicho servicio.
 * Si algún propietario de contenido considera que un recurso utilizado en el proyecto no debería aparecer aquí, puede solicitar su revisión o retirada.
 
 ---
@@ -180,7 +180,7 @@ Acceso Libros utiliza algunos recursos visuales externos, incluyendo imágenes, 
 
 El código y los elementos originales desarrollados específicamente para este proyecto pertenecen a su autor, salvo que se indique expresamente lo contrario. Los recursos de terceros mantienen sus correspondientes derechos y condiciones de uso.
 
-Acceso Libros no reclama la propiedad de las marcas, logotipos, imágenes o contenidos externos que aparecen asociados a los recursos enlazados.
+GP Learn no reclama la propiedad de las marcas, logotipos, imágenes o contenidos externos que aparecen asociados a los recursos enlazados.
 
 Este repositorio **no incluye actualmente una licencia de software específica**. Por tanto, la publicación del código en GitHub no debe interpretarse automáticamente como una concesión de derechos para reutilizarlo, modificarlo o redistribuirlo. Si en el futuro se añade una licencia, esta sección deberá actualizarse para reflejarla.
 
@@ -188,16 +188,16 @@ Este repositorio **no incluye actualmente una licencia de software específica**
 
 ## 🔐 Seguridad y limitaciones
 
-Acceso Libros está diseñado como una herramienta personal para organizar accesos a recursos externos.
+GP Learn está diseñado como una herramienta personal para organizar accesos a recursos externos.
 * **No controla** el contenido de las páginas a las que enlaza ni garantiza su disponibilidad, seguridad, legalidad o funcionamiento.
 * Los enlaces y servicios externos pueden cambiar, desaparecer o modificar sus condiciones de uso independientemente de este proyecto.
-* Por la misma razón, Acceso Libros debe considerarse una **interfaz de organización y acceso**, no una plataforma que aloje o distribuya los libros o contenidos externos mostrados en ella.
+* Por la misma razón, GP Learn debe considerarse una **interfaz de organización y acceso**, no una plataforma que aloje o distribuya los libros o contenidos externos mostrados en ella.
 
 ---
 
 ## 📌 Estado del proyecto
 
-Acceso Libros es un proyecto en desarrollo. Las funciones pueden cambiar, mejorarse o sustituirse con el tiempo. Algunas partes están pensadas específicamente para uso personal y pueden no estar preparadas para escenarios de producción a gran escala.
+GP Learn es un proyecto en desarrollo. Las funciones pueden cambiar, mejorarse o sustituirse con el tiempo. Algunas partes están pensadas específicamente para uso personal y pueden no estar preparadas para escenarios de producción a gran escala.
 
 ---
 
@@ -210,6 +210,6 @@ GitHub: [@CapybaraGalaxy](https://github.com/CapybaraGalaxy)
 
 ## 📄 Nota final
 
-Acceso Libros nace como un proyecto para hacer más cómodo el acceso a recursos digitales relacionados con lectura, educación y estudio, reuniéndolos en una interfaz sencilla y personalizable.
+GP Learn nace como un proyecto para hacer más cómodo el acceso a recursos digitales relacionados con lectura, educación y estudio, reuniéndolos en una interfaz sencilla y personalizable.
 
 El objetivo no es sustituir los servicios enlazados, sino ofrecer un punto de acceso práctico para tenerlos organizados en un único lugar.

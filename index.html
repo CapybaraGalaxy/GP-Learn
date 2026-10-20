@@ -2643,5 +2643,17 @@ const APP_VERSION = '1.0.1';
     <script>
         lucide.createIcons();
     </script>
+<!-- Registro del Service Worker para PWA -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker registrado con éxito:', reg.scope))
+                    .catch(err => console.log('Error al registrar el Service Worker:', err));
+            });
+        }
+    </script>
+</body>
+</html>
 </body>
 </html>
