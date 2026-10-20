@@ -7,10 +7,12 @@
         (() => {
             try {
                 const saved = JSON.parse(localStorage.getItem("school_library_data") || "null");
-                const theme = saved?.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+                const theme = saved?.theme === "mono" ? "light" : (saved?.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"));
                 const density = saved?.density || "normal";
                 document.documentElement.dataset.theme = theme;
                 document.documentElement.dataset.density = density;
+                if (saved?.theme === "mono") document.documentElement.style.setProperty("--accent", "#333333");
+                else if (saved?.accent) document.documentElement.style.setProperty("--accent", saved.accent);
             } catch (_) {}
         })();
     </script>
@@ -64,27 +66,6 @@
             --shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
         }
 
-        [data-theme="mono"] {
-            --bg: #f1f1f1;
-            --surface: #ffffff;
-            --surface-hover: #e5e5e5;
-            --border: rgba(0, 0, 0, 0.42);
-            --scrollbar-track: #f1f1f1;
-            --scrollbar-thumb: #666666;
-            --text-main: #111111;
-            --text-muted: #555555;
-            --accent: #333333;
-            --accent-danger: #333333;
-            --accent-success: #333333;
-            --star-color: #333333;
-            --shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
-        }
-
-        [data-theme="mono"] .segment-btn.active {
-            background: var(--accent);
-            color: #ffffff;
-        }
-
         * {
             box-sizing: border-box;
             margin: 0;
@@ -120,14 +101,12 @@
             color: var(--text-main);
             transition: background-color 0.4s var(--bezier), color 0.4s var(--bezier);
             min-height: 100dvh;
-            display: flex;
-            justify-content: center;
         }
 
         .app-container {
             width: 100%;
-            max-width: 960px;
             height: 100dvh;
+            min-height: 100dvh;
             padding: env(safe-area-inset-top) 24px calc(env(safe-area-inset-bottom) + 16px) 24px;
             display: flex;
             flex-direction: column;
@@ -536,11 +515,16 @@
             border-radius: 100px;
             padding: 6px;
             box-shadow: var(--shadow);
-            transition: width 0.35s var(--spring), padding 0.3s var(--bezier);
+            transition: width 0.42s var(--spring), padding 0.3s var(--bezier), border-color 0.25s var(--bezier), box-shadow 0.3s var(--bezier), background-color 0.3s var(--bezier);
             width: 52px;
             height: 52px;
             overflow: hidden;
             z-index: 10;
+        }
+
+        .fab-search-container:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2), 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
         }
 
         .fab-search-container.expanded {
@@ -555,13 +539,22 @@
             outline: none;
             color: var(--text-main);
             font-size: 0.95rem;
-            margin-left: 10px;
-            width: 100%;
-            display: none;
+            margin-left: 0;
+            width: 0;
+            min-width: 0;
+            flex: 1;
+            opacity: 0;
+            transform: translateX(10px);
+            pointer-events: none;
+            transition: width 0.3s var(--bezier), margin-left 0.3s var(--bezier), opacity 0.2s var(--bezier), transform 0.3s var(--spring);
         }
 
         .fab-search-container.expanded .fab-search-input {
-            display: block;
+            width: 100%;
+            margin-left: 10px;
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: auto;
         }
 
         .fab-search-btn {
@@ -576,6 +569,39 @@
             height: 38px;
             border-radius: 50%;
             flex-shrink: 0;
+            transition: transform 0.3s var(--spring), color 0.2s var(--bezier), background 0.2s var(--bezier);
+        }
+
+        .fab-search-btn:hover {
+            color: var(--accent);
+            background: var(--surface-hover);
+        }
+
+        .fab-search-container.expanded .fab-search-btn {
+            transform: rotate(-8deg);
+        }
+
+        .version-badge {
+            position: absolute;
+            left: 24px;
+            bottom: calc(env(safe-area-inset-bottom) + 24px);
+            z-index: 5;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            background: var(--surface);
+            color: var(--text-muted);
+            box-shadow: var(--shadow);
+            font-size: 0.76rem;
+            font-weight: 600;
+            letter-spacing: 0.03em;
+            transition: opacity 0.2s var(--bezier), transform 0.2s var(--bezier);
+        }
+
+        .app-container.search-expanded .version-badge {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(4px);
         }
 
         .modal-overlay {
@@ -815,6 +841,16 @@
             border-color: var(--accent);
         }
 
+        .share-link-fallback {
+            display: none;
+            width: 100%;
+            background: var(--bg);
+            border: 1px solid var(--accent);
+            border-radius: 12px;
+            padding: 10px;
+            color: var(--text-main);
+        }
+
         .row-group {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -958,11 +994,6 @@
             background: rgba(255, 255, 255, 0.9);
             border-color: rgba(0, 0, 0, 0.1);
         }
-        [data-theme="mono"] #share-modal .modal-content {
-            background: rgba(255, 255, 255, 0.94);
-            border-color: rgba(0, 0, 0, 0.42);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.2);
-        }
         .airdrop-hero { display:flex; flex-direction:column; align-items:center; text-align:center; position:relative; padding:10px 0 14px; }
         .airdrop-close { position:absolute; top:-12px; right:-12px; width:36px; height:36px; border:1px solid var(--border); border-radius:50%; background:var(--surface-hover); color:var(--text-main); display:flex; align-items:center; justify-content:center; cursor:pointer; }
         .airdrop-radar { position:relative; width:86px; height:86px; display:flex; align-items:center; justify-content:center; margin:8px 0 16px; }
@@ -976,7 +1007,6 @@
         .airdrop-title { font-size:1.35rem; font-weight:800; letter-spacing:-.02em; margin-top:4px; overflow-wrap:anywhere; }
         .airdrop-subtitle { font-size:.86rem; color:var(--text-muted); margin-top:6px; max-width:320px; line-height:1.45; }
         .airdrop-security-badge { background:rgba(255,149,0,.12); border:1px solid rgba(255,149,0,.3); color:#ff9500; padding:8px 14px; border-radius:100px; font-size:.78rem; font-weight:600; display:inline-flex; align-items:center; gap:6px; margin-top:12px; }
-        [data-theme="mono"] .airdrop-security-badge { background:rgba(0,0,0,.08); border-color:rgba(0,0,0,.42); color:var(--text-main); }
         .airdrop-list-header { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:0 4px 8px; border-bottom:1px solid var(--border); margin-bottom:10px; }
         .airdrop-list-header > span { font-size:.8rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted); }
         .airdrop-actions-quick { display:flex; gap:6px; }
@@ -1022,6 +1052,9 @@
         @keyframes pageFlip { 0%{transform:rotateY(0)} 35%{transform:rotateY(80deg) scale(1.08)} 70%{transform:rotateY(-12deg)} 100%{transform:rotateY(0)} }
         .version-info { font-size:.82rem; color:var(--text-muted); line-height:1.45; background:var(--bg); border:1px solid var(--border); border-radius:14px; padding:12px; }
         .version-info strong { color:var(--text-main); }
+        .changelog-release + .changelog-release { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+        .changelog-release > small { display:block; margin-top:2px; color:var(--text-muted); }
+        .changelog-release ul { display:flex; flex-direction:column; gap:5px; margin:8px 0 0 18px; }
         @keyframes menu-in { from { opacity:0; transform:scale(.96) translateY(-4px);} to {opacity:1; transform:scale(1) translateY(0);} }
         html.booting *, html.booting *::before, html.booting *::after { transition:none !important; animation:none !important; }
         @media (max-width:600px){ .context-menu button{min-height:44px;} .modal-tab{padding:11px 6px;font-size:.85rem;} }
@@ -1076,11 +1109,12 @@
 
         <!-- Buscador Flotante -->
         <div class="fab-search-container" id="fab-search">
-            <button class="fab-search-btn" onclick="toggleSearch()" title="Buscar">
+            <button class="fab-search-btn" onclick="toggleSearch()" title="Buscar" aria-label="Abrir búsqueda" aria-expanded="false" aria-controls="search-input">
                 <i data-lucide="search" size="18"></i>
             </button>
-            <input type="text" id="search-input" class="fab-search-input" placeholder="Buscar título, descripción o etiqueta..." oninput="handleSearch(this.value)">
+            <input type="text" id="search-input" class="fab-search-input" placeholder="Buscar título, descripción o etiqueta..." oninput="handleSearch(this.value)" onkeydown="handleSearchKeydown(event)" aria-label="Buscar recursos" tabindex="-1">
         </div>
+        <div class="version-badge" id="current-version" aria-label="Versión actual"></div>
     </div>
 
     <!-- Modal de Selección de Accesos Predeterminados -->
@@ -1118,9 +1152,6 @@
                     <button class="segment-btn" id="theme-light-btn" onclick="setTheme('light')">
                         <i data-lucide="sun" size="14"></i> Claro
                     </button>
-                    <button class="segment-btn" id="theme-mono-btn" onclick="setTheme('mono')">
-                        <i data-lucide="contrast" size="14"></i> Monocromo
-                    </button>
                 </div>
             </div>
 
@@ -1156,6 +1187,7 @@
                     <div class="color-dot" style="background: #34c759;" onclick="setAccent('#34c759')"></div>
                     <div class="color-dot" style="background: #af52de;" onclick="setAccent('#af52de')"></div>
                     <div class="color-dot" style="background: #ff9500;" onclick="setAccent('#ff9500')"></div>
+                    <div class="color-dot" style="background: #333333;" onclick="setAccent('#333333')" title="Monocromático" aria-label="Color de énfasis monocromático" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();setAccent('#333333')}"></div>
                 </div>
             </div>
 
@@ -1169,6 +1201,11 @@
                     <input type="checkbox" id="show-guide-btn-input" onchange="toggleGuideBtnVisibility(this.checked)">
                     Mostrar botón de Consejos/Guía (bombilla)
                 </label>
+                <div class="settings-label" style="margin-top:4px;">Abrir accesos</div>
+                <div class="segmented-control" id="link-target-control">
+                    <button class="segment-btn" id="link-new-tab-btn" onclick="setLinkTarget('_blank')">Nueva pestaña</button>
+                    <button class="segment-btn" id="link-same-tab-btn" onclick="setLinkTarget('_self')">Esta pestaña</button>
+                </div>
             </div>
 
             <div class="settings-section">
@@ -1179,7 +1216,7 @@
             <!-- Gestión de Biblioteca -->
             <div class="settings-section" style="margin-top: 12px; gap: 8px;">
                 <div class="settings-label">Gestión de Biblioteca</div>
-                <button class="btn btn-secondary btn-full" onclick="shareCollection()">
+                <button class="btn btn-secondary btn-full" onclick="openCollectionShareModal()">
                     <i data-lucide="share-2" size="16"></i> Compartir Colección mediante Enlace
                 </button>
                 <button class="btn btn-secondary btn-full" onclick="openManageLibrary()">
@@ -1192,6 +1229,14 @@
                 <i data-lucide="zap" size="16"></i> Modo LITE <span id="trash-count"></span>
                 </button>
 
+                <div class="settings-label" style="margin-top:6px;">Colecciones guardadas</div>
+                <div class="settings-scroll" id="saved-collections-list"></div>
+                <div class="input-group">
+                    <label for="paste-import-input">Importar colección o copia de seguridad</label>
+                    <textarea id="paste-import-input" rows="3" placeholder="Pega aquí un enlace compartido o el contenido JSON de una colección o copia de seguridad"></textarea>
+                    <button class="btn btn-secondary btn-full" onclick="pasteFromClipboard()">Leer del portapapeles</button>
+                    <button class="btn btn-secondary btn-full" onclick="importPastedData()">Importar texto pegado</button>
+                </div>
                 <div class="settings-label" style="margin-top:6px;">Recibimientos recientes</div>
                 <div class="settings-scroll" id="received-history"></div>
                 <div class="row-group">
@@ -1220,6 +1265,7 @@
                 <p style="margin-bottom: 12px;">Al presionar <strong>Copiar enlace</strong>, se generará un enlace para añadir este acceso a Acceso Libros en otro dispositivo.</p>
                 <p>Abre el enlace en el otro dispositivo para importarlo directamente.</p>
             </div>
+            <input class="share-link-fallback" id="single-share-url-fallback" type="text" readonly aria-label="Enlace para copiar manualmente">
             <div class="modal-actions">
                 <button class="btn btn-secondary" onclick="closeActiveModal('share-info-modal')">Cancelar</button>
                 <button class="btn btn-primary" id="confirm-share-btn">Copiar enlace</button>
@@ -1316,13 +1362,27 @@
             </div>
             <div class="input-group">
                 <label for="collection-name-input">Nombre de la colección</label>
-                <input type="text" id="collection-name-input" value="Mi biblioteca">
+                <input type="text" id="collection-name-input" value="Mi colección" maxlength="80">
             </div>
-            <div style="font-size:.95rem;line-height:1.5;color:var(--text-muted)">
-                <p>Se generará una URL que incluye el nombre, recursos, categorías/etiquetas, descripciones e iconos codificados sin servidor.</p>
-                <p>Funciona bien con colecciones pequeñas. Si añades muchos recursos, el enlace puede volverse demasiado largo para algunas apps.</p>
+            <div class="input-group">
+                <label for="collection-description-input">Descripción</label>
+                <textarea id="collection-description-input" rows="2" maxlength="240" placeholder="Describe brevemente esta colección"></textarea>
             </div>
-            <div class="modal-actions"><button class="btn btn-secondary" onclick="closeActiveModal('collection-share-info-modal')">Cancelar</button><button class="btn btn-primary" id="confirm-collection-share-btn">Copiar enlace</button></div>
+            <div style="font-size:.84rem;line-height:1.45;color:var(--text-muted)">
+                La colección se guardará en Ajustes. El enlace incluye los recursos seleccionados y puede ser largo si añades muchos.
+            </div>
+            <div>
+                <div class="airdrop-list-header">
+                    <span id="collection-selection-count">0 seleccionados</span>
+                    <div class="airdrop-actions-quick">
+                        <button type="button" onclick="selectCollectionResources(true)">Todo</button>
+                        <button type="button" onclick="selectCollectionResources(false)">Ninguno</button>
+                    </div>
+                </div>
+                <div class="preset-list share-items-list" id="collection-share-items"></div>
+            </div>
+            <input class="share-link-fallback" id="collection-share-url-fallback" type="text" readonly aria-label="Enlace para copiar manualmente">
+            <div class="modal-actions"><button class="btn btn-secondary" onclick="closeActiveModal('collection-share-info-modal')">Cancelar</button><button class="btn btn-primary" id="confirm-collection-share-btn" onclick="shareCollection()">Guardar y copiar enlace</button></div>
         </div>
     </div>
 
@@ -1464,7 +1524,7 @@ const PRESET_BOOKS = [
     },
     {
         id: 'homescreen-neo',
-        title: 'Herramientas',
+        title: 'Homescreen NEO',
         url: 'https://homescreen.guilleplayer.workers.dev/',
         logo: 'https://i.imgur.com/enEM3OE.png',
         logoSquare: 'https://github.com/CapybaraGalaxy/HOMESCREEN/blob/main/favicon.png?raw=true',
@@ -1472,6 +1532,17 @@ const PRESET_BOOKS = [
         tags: ['Homescreen', 'GP'],
         target: '_blank',
         color: '#8c8c8c'
+    },
+    {
+        id: 'pomodoro',
+        title: 'Temporizador Pomodoro',
+        url: 'https://gp-learn.guilleplayer.workers.dev/Apps/pomodoro',
+        logo: 'https://i.imgur.com/jAEcPMW.png',
+        logoSquare: 'https://github.com/CapybaraGalaxy/GP-Learn/blob/main/Media/icon-pomodoro.png?raw=true',
+        description: 'Temporizador pomoro',
+        tags: ['Herramientas'],
+        target: '_blank',
+        color: '#a60004'
     }
 ];
 
@@ -1480,8 +1551,10 @@ const PRESET_BOOKS = [
 
             viewMode: 'grid',
             accent: '#ff453a',
+            linkTarget: '_blank',
             selectedPresets: ['ebiblio', 'cervantes'],
             customBooks: [],
+            savedCollections: [],
             favorites: [],
             pinned: [],
             trash: [],
@@ -1491,26 +1564,39 @@ const PRESET_BOOKS = [
             density: 'normal'
         };
 
-const APP_VERSION = '1.0.1';
+const APP_VERSION = '1.1';
         const APP_CHANGELOG = [
             { 
-                version: '1.0.1', 
-                date: '2026-10-05', 
+                version: '1.1',
+                date: '2026-10-20',
                 changes: [
-                    'Lanzamiento oficial de la plataforma de acceso a libros y recursos educativos.',
-                    'Gestión completa de accesos predefinidos y creación de recursos personalizados.',
-                    'Temas oscuro, claro y monocromo, con opciones de densidad y color de énfasis.',
-                    'Múltiples opciones de visualización (cuadrícula, lista y formato compacto).',
-                    'Buscador flotante en tiempo real, administración de favoritos y elementos fijados.',
-                    'Herramientas avanzadas de copia de seguridad (importar/exportar) y papelera de reciclaje.',
-                    'Incorporación del nuevo Modo LITE de alta velocidad y sin errores, disponible desde los ajustes.'
+                    'El monocromático ahora es un color de énfasis independiente del tema y también funciona con el tema oscuro.',
+                    'El contenedor principal ocupa toda la pantalla.',
+                    'Nueva preferencia para abrir los accesos en una pestaña nueva o en la pestaña actual.',
+                    'Animaciones de búsqueda mejoradas, con control de foco y cierre mediante Escape.',
+                    'Creación de colecciones con selección de accesos, nombre y descripción.',
+                    'Colecciones guardadas en Ajustes para volver a compartirlas o descargarlas.',
+                    'Importación de colecciones desde enlaces, archivos JSON o texto pegado; las colecciones recibidas también quedan guardadas.',
+                    'Detección de copias de seguridad al importar texto o JSON y exportación de todos los ajustes actuales.',
+                    'La acción para deshacer la recepción de una colección también la retira de las colecciones guardadas.',
+                    'La versión actual se muestra en la esquina inferior izquierda.'
                 ] 
+            },
+            {
+                version: '1.0.1',
+                date: '2026-10-05',
+                changes: [
+                    'Lanzamiento de la biblioteca digital con gestión de accesos predefinidos y personalizados.',
+                    'Temas, visualizaciones, densidad, favoritos, elementos fijados y búsqueda.',
+                    'Importación y exportación de copias de seguridad, papelera y modo LITE.'
+                ]
             }
         ];
 
         let editingBookId = null;
         let pendingSharedItems = [];
         let pendingShareName = '';
+        let pendingShareDescription = '';
         let pendingShareType = 'single';
         let selectedSharedItems = [];
         let searchQuery = '';
@@ -1518,6 +1604,8 @@ const APP_VERSION = '1.0.1';
         let activeModalsStack = [];
         let pendingShareUrl = '';
         let pendingCollectionShare = false;
+        let pendingCollectionSaved = false;
+        let collectionResourceItems = [];
         let longPressTimer = null;
         let contextMenuEl = null;
         let iconMode = 'url';
@@ -1535,10 +1623,17 @@ const APP_VERSION = '1.0.1';
                 appState.theme = systemPrefersDark ? 'dark' : 'light';
             }
 
+            if (appState.theme === 'mono') {
+                appState.theme = 'light';
+                appState.accent = '#333333';
+            }
+            if (!['dark', 'light'].includes(appState.theme)) appState.theme = systemPrefersDark ? 'dark' : 'light';
+            if (!['_blank', '_self'].includes(appState.linkTarget)) appState.linkTarget = '_blank';
             appState.favorites = appState.favorites || [];
             appState.pinned = appState.pinned || [];
             appState.trash = Array.isArray(appState.trash) ? appState.trash : [];
             appState.receivedHistory = Array.isArray(appState.receivedHistory) ? appState.receivedHistory : [];
+            appState.savedCollections = Array.isArray(appState.savedCollections) ? appState.savedCollections : [];
             if (appState.showAddButton === undefined) appState.showAddButton = true;
             if (appState.showGuideButton === undefined) appState.showGuideButton = true;
             purgeExpiredTrash();
@@ -1551,8 +1646,10 @@ const APP_VERSION = '1.0.1';
             
             document.getElementById('show-add-btn-input').checked = appState.showAddButton;
             document.getElementById('show-guide-btn-input').checked = appState.showGuideButton;
+            setLinkTarget(appState.linkTarget, false);
             toggleGuideBtnVisibility(appState.showGuideButton, false);
             renderReceivedHistory();
+            renderSavedCollections();
             renderTrash();
 
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
@@ -1573,53 +1670,57 @@ const APP_VERSION = '1.0.1';
                 try {
                     const encoded = hash.replace('#share=', '');
                     const jsonString = decodeURIComponent(escape(atob(encoded)));
-                    const shareData = JSON.parse(jsonString);
-                    if (shareData && Array.isArray(shareData.resources) && shareData.resources.length > 0) {
-                        pendingSharedItems = shareData.resources.filter(item => item && typeof item === 'object');
-                        if (!pendingSharedItems.length) return;
-                        pendingShareName = typeof shareData.name === 'string' && shareData.name.trim()
-                            ? shareData.name.trim()
-                            : (shareData.type === 'collection' ? 'Colección compartida' : 'Acceso compartido');
-                        pendingShareType = shareData.type === 'collection' || pendingSharedItems.length > 1 ? 'collection' : 'single';
-                        selectedSharedItems = pendingSharedItems.map(() => true);
-                        const isSingle = shareData.type === 'single' || shareData.resources.length === 1;
-
-                        const titleEl = document.getElementById('share-modal-title');
-                        const descEl = document.getElementById('share-modal-desc');
-                        const nameEl = document.getElementById('share-collection-name');
-
-                        if (titleEl) {
-                            titleEl.textContent = isSingle ? 'Acceso compartido recibido' : 'Colección recibida';
-                        }
-                        if (descEl) {
-                            descEl.textContent = isSingle
-                                ? 'Revisa este acceso antes de añadirlo. Puedes deshacer la recepción más tarde desde Ajustes.'
-                                : `Te han enviado ${pendingSharedItems.length} accesos. Elige cuáles quieres añadir; no se abrirá ningún sitio al importarlos.`;
-                        }
-                        if (nameEl) nameEl.textContent = pendingShareType === 'single' ? (pendingSharedItems[0].title || pendingShareName) : pendingShareName;
-
-                        const previewContainer = document.getElementById('shared-items-preview');
-                        if (previewContainer) {
-                            previewContainer.innerHTML = pendingSharedItems.map((item, index) => `
-                                <label class="airdrop-item selected" id="airdrop-item-${index}" style="animation-delay:${Math.min(index * 60, 480)}ms">
-                                    <input class="airdrop-item-input" type="checkbox" checked onchange="setSharedItemSelected(${index}, this.checked)" aria-label="Añadir ${escapeHtml(item.title || 'Recurso')}">
-                                    <span class="airdrop-item-check" aria-hidden="true"><i data-lucide="check" size="14"></i></span>
-                                    <span class="airdrop-item-icon">${getSharedItemIconHtml(item)}</span>
-                                    <span class="airdrop-item-info">
-                                        <span class="airdrop-item-title">${escapeHtml(item.title || 'Recurso sin título')}</span>
-                                        <span class="airdrop-item-desc">${escapeHtml(item.description || item.url || 'Sin descripción')}</span>
-                                    </span>
-                                </label>
-                            `).join('');
-                        }
-                        updateSharedSelection();
-                        openModal('share-modal');
-                        lucide.createIcons();
-                    }
+                    openSharedPayload(JSON.parse(jsonString));
                 } catch (e) {
                     console.error("Error al cargar datos compartidos", e);
+                    showToast('No se pudo leer el enlace compartido.');
                 }
             }
+        }
+
+        function openSharedPayload(shareData) {
+            if (!shareData || !Array.isArray(shareData.resources)) {
+                showToast('El contenido no es una colección ni un acceso compartido válido.');
+                return false;
+            }
+            pendingSharedItems = shareData.resources.filter(item => item && typeof item === 'object');
+            if (!pendingSharedItems.length) {
+                showToast('La colección no contiene accesos válidos.');
+                return false;
+            }
+            pendingShareName = typeof shareData.name === 'string' && shareData.name.trim()
+                ? shareData.name.trim()
+                : (shareData.type === 'collection' ? 'Colección compartida' : 'Acceso compartido');
+            pendingShareDescription = typeof shareData.description === 'string' ? shareData.description.trim() : '';
+            pendingShareType = shareData.type === 'collection' || pendingSharedItems.length > 1 ? 'collection' : 'single';
+            selectedSharedItems = pendingSharedItems.map(() => true);
+            const isSingle = pendingShareType === 'single';
+            const titleEl = document.getElementById('share-modal-title');
+            const descEl = document.getElementById('share-modal-desc');
+            const nameEl = document.getElementById('share-collection-name');
+            titleEl.textContent = isSingle ? 'Acceso compartido recibido' : 'Colección recibida';
+            const description = typeof shareData.description === 'string' ? shareData.description.trim() : '';
+            descEl.textContent = `${description ? `${description} · ` : ''}${isSingle
+                ? 'Revisa este acceso antes de añadirlo. Puedes deshacer la recepción más tarde desde Ajustes.'
+                : `Te han enviado ${pendingSharedItems.length} accesos. Elige cuáles quieres añadir; no se abrirá ningún sitio al importarlos.`}`;
+            nameEl.textContent = isSingle ? (pendingSharedItems[0].title || pendingShareName) : pendingShareName;
+
+            const previewContainer = document.getElementById('shared-items-preview');
+            previewContainer.innerHTML = pendingSharedItems.map((item, index) => `
+                <label class="airdrop-item selected" id="airdrop-item-${index}" style="animation-delay:${Math.min(index * 60, 480)}ms">
+                    <input class="airdrop-item-input" type="checkbox" checked onchange="setSharedItemSelected(${index}, this.checked)" aria-label="Añadir ${escapeHtml(item.title || 'Recurso')}">
+                    <span class="airdrop-item-check" aria-hidden="true"><i data-lucide="check" size="14"></i></span>
+                    <span class="airdrop-item-icon">${getSharedItemIconHtml(item)}</span>
+                    <span class="airdrop-item-info">
+                        <span class="airdrop-item-title">${escapeHtml(item.title || 'Recurso sin título')}</span>
+                        <span class="airdrop-item-desc">${escapeHtml(item.description || item.url || 'Sin descripción')}</span>
+                    </span>
+                </label>
+            `).join('');
+            updateSharedSelection();
+            openModal('share-modal');
+            lucide.createIcons();
+            return true;
         }
 
         function confirmImportShared() {
@@ -1654,18 +1755,28 @@ const APP_VERSION = '1.0.1';
                     return;
                 }
                 appState.customBooks.push(...validBooks);
+                const receivedCollection = pendingShareType === 'collection' ? {
+                    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                    name: pendingShareName,
+                    description: pendingShareDescription,
+                    resources: validBooks.map(serializeResource),
+                    createdAt: Date.now()
+                } : null;
+                if (receivedCollection) appState.savedCollections.unshift(receivedCollection);
                 const receipt = {
                     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
                     name: pendingShareName,
                     type: pendingShareType,
                     receivedAt: Date.now(),
-                    books: validBooks.map(book => ({ ...book }))
+                    books: validBooks.map(book => ({ ...book })),
+                    savedCollectionId: receivedCollection?.id || ''
                 };
                 appState.receivedHistory.unshift(receipt);
                 appState.receivedHistory = appState.receivedHistory.slice(0, 50);
                 saveData();
                 renderApp();
                 renderReceivedHistory();
+                renderSavedCollections();
                 showToast(validBooks.length === 1 ? 'Acceso añadido a tu biblioteca.' : `${validBooks.length} accesos añadidos a tu biblioteca.`, 'Deshacer', () => undoReceived(receipt.id));
                 window.location.hash = '';
             }
@@ -1717,8 +1828,15 @@ const APP_VERSION = '1.0.1';
         }
 
         function renderVersionInfo() {
-            const latest = APP_CHANGELOG[0];
-            document.getElementById('version-info').innerHTML = `<strong>Acceso Libros ${APP_VERSION}</strong><br>${latest.changes.map(c=>'• '+escapeHtml(c)).join('<br>')}`;
+            document.getElementById('current-version').textContent = `v${APP_VERSION}`;
+            document.getElementById('current-version').title = `Acceso Libros ${APP_VERSION}`;
+            document.getElementById('version-info').innerHTML = APP_CHANGELOG.map(release => `
+                <section class="changelog-release">
+                    <strong>Versión ${escapeHtml(release.version)}</strong>
+                    <small>${escapeHtml(release.date)}</small>
+                    <ul>${release.changes.map(change => `<li>${escapeHtml(change)}</li>`).join('')}</ul>
+                </section>
+            `).join('');
         }
 
         function setDensity(mode, shouldSave = true) {
@@ -1733,16 +1851,16 @@ const APP_VERSION = '1.0.1';
         }
 
         function applyTheme(theme) {
+            if (theme === 'mono') {
+                theme = 'light';
+                appState.accent = '#333333';
+            }
+            if (!['dark', 'light'].includes(theme)) theme = 'dark';
             appState.theme = theme;
             document.documentElement.setAttribute('data-theme', theme);
-            if (theme === 'mono') {
-                document.documentElement.style.removeProperty('--accent');
-            } else {
-                document.documentElement.style.setProperty('--accent', appState.accent);
-            }
+            document.documentElement.style.setProperty('--accent', appState.accent);
             document.getElementById('theme-dark-btn').classList.toggle('active', theme === 'dark');
             document.getElementById('theme-light-btn').classList.toggle('active', theme === 'light');
-            document.getElementById('theme-mono-btn').classList.toggle('active', theme === 'mono');
         }
 
         function setTheme(theme) {
@@ -1752,9 +1870,7 @@ const APP_VERSION = '1.0.1';
 
         function applyAccent(color) {
             appState.accent = color;
-            if (appState.theme !== 'mono') {
-                document.documentElement.style.setProperty('--accent', color);
-            }
+            document.documentElement.style.setProperty('--accent', color);
             document.querySelectorAll('.color-dot').forEach(dot => {
                 const dotBg = dot.style.backgroundColor;
                 const hex = rgbToHex(dotBg).toLowerCase();
@@ -1765,6 +1881,13 @@ const APP_VERSION = '1.0.1';
         function setAccent(color) {
             applyAccent(color);
             saveData();
+        }
+
+        function setLinkTarget(target, shouldSave = true) {
+            appState.linkTarget = target === '_self' ? '_self' : '_blank';
+            document.getElementById('link-new-tab-btn').classList.toggle('active', appState.linkTarget === '_blank');
+            document.getElementById('link-same-tab-btn').classList.toggle('active', appState.linkTarget === '_self');
+            if (shouldSave) saveData();
         }
 
         function rgbToHex(rgb) {
@@ -1802,12 +1925,28 @@ const APP_VERSION = '1.0.1';
         function toggleSearch() {
             const container = document.getElementById('fab-search');
             const input = document.getElementById('search-input');
+            const button = container.querySelector('.fab-search-btn');
             const isExpanded = container.classList.toggle('expanded');
+            document.getElementById('main-view').classList.toggle('search-expanded', isExpanded);
+            button.setAttribute('aria-expanded', String(isExpanded));
+            button.setAttribute('aria-label', isExpanded ? 'Cerrar búsqueda' : 'Abrir búsqueda');
+            input.tabIndex = isExpanded ? 0 : -1;
             if (isExpanded) {
-                input.focus();
+                window.requestAnimationFrame(() => {
+                    if (container.classList.contains('expanded')) input.focus();
+                });
             } else {
                 input.value = '';
                 handleSearch('');
+                input.blur();
+                button.focus();
+            }
+        }
+
+        function handleSearchKeydown(event) {
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                toggleSearch();
             }
         }
 
@@ -1864,6 +2003,8 @@ const APP_VERSION = '1.0.1';
             const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(shareData))));
             pendingShareUrl = `${location.origin}${location.pathname}#share=${encoded}`;
             pendingCollectionShare = false;
+            pendingCollectionSaved = false;
+            document.getElementById('single-share-url-fallback').style.display = 'none';
 
             const titleEl = document.getElementById('share-info-modal-title');
             const descEl = document.getElementById('share-info-modal-desc');
@@ -1882,10 +2023,38 @@ const APP_VERSION = '1.0.1';
         function copyPendingShareUrl() {
             const done = () => { 
                 showToast(pendingCollectionShare ? "Enlace de colección copiado" : "Enlace de acceso copiado"); 
+                document.getElementById(pendingCollectionShare ? 'collection-share-url-fallback' : 'single-share-url-fallback').style.display = 'none';
                 closeActiveModal(pendingCollectionShare ? 'collection-share-info-modal' : 'share-info-modal'); 
             };
-            if (navigator.clipboard?.writeText) navigator.clipboard.writeText(pendingShareUrl).then(done).catch(() => prompt("Copia este enlace:", pendingShareUrl));
-            else prompt("Copia este enlace:", pendingShareUrl);
+            const fallback = () => {
+                const input = document.getElementById(pendingCollectionShare ? 'collection-share-url-fallback' : 'single-share-url-fallback');
+                input.value = pendingShareUrl;
+                input.style.display = 'block';
+                input.focus();
+                input.select();
+                try {
+                    if (document.execCommand('copy')) {
+                        done();
+                        return;
+                    }
+                } catch (error) {
+                    console.error('No se pudo copiar el enlace automáticamente', error);
+                }
+                showToast('No se pudo copiar automáticamente. Selecciona el enlace y cópialo.');
+            };
+            try {
+                if (navigator.clipboard?.writeText) {
+                    navigator.clipboard.writeText(pendingShareUrl).then(done).catch(error => {
+                        console.error('No se pudo usar el portapapeles', error);
+                        fallback();
+                    });
+                } else {
+                    fallback();
+                }
+            } catch (error) {
+                console.error('No se pudo usar el portapapeles', error);
+                fallback();
+            }
         }
 
         function showToast(message, actionLabel, action) {
@@ -2056,8 +2225,8 @@ const APP_VERSION = '1.0.1';
             const card = document.createElement('a');
             card.className = 'book-card';
             card.href = book.url;
-            card.target = book.target || '_blank';
-            card.rel = 'noopener noreferrer';
+            card.target = appState.linkTarget || book.target || '_blank';
+            if (card.target === '_blank') card.rel = 'noopener noreferrer';
             card.style.animationDelay = `${index * 0.04}s`;
             if (book.color) card.style.setProperty('--card-color', book.color);
 
@@ -2393,6 +2562,9 @@ const APP_VERSION = '1.0.1';
             appState.trash = appState.trash.filter(entry => !importedIds.has(entry.book.id));
             appState.favorites = appState.favorites.filter(id => !importedIds.has(id));
             appState.pinned = appState.pinned.filter(id => !importedIds.has(id));
+            if (receipt.savedCollectionId) {
+                appState.savedCollections = appState.savedCollections.filter(collection => collection.id !== receipt.savedCollectionId);
+            }
             receipt.undoneAt = Date.now();
             saveData();
             renderApp();
@@ -2435,6 +2607,57 @@ const APP_VERSION = '1.0.1';
                 }
                 container.appendChild(row);
             });
+        }
+
+        function renderSavedCollections() {
+            const container = document.getElementById('saved-collections-list');
+            if (!container) return;
+            container.replaceChildren();
+            if (!appState.savedCollections.length) {
+                const empty = document.createElement('div');
+                empty.className = 'version-info';
+                empty.textContent = 'Las colecciones que crees aparecerán aquí para volver a compartirlas o descargarlas.';
+                container.appendChild(empty);
+                return;
+            }
+            appState.savedCollections.forEach(collection => {
+                const row = document.createElement('div');
+                row.className = 'history-row';
+                const info = document.createElement('div');
+                const title = document.createElement('strong');
+                title.textContent = collection.name || 'Colección sin nombre';
+                const detail = document.createElement('small');
+                const count = Array.isArray(collection.resources) ? collection.resources.length : 0;
+                detail.textContent = `${count} ${count === 1 ? 'acceso' : 'accesos'}${collection.description ? ` · ${collection.description}` : ''}`;
+                info.append(title, detail);
+                const actions = document.createElement('div');
+                actions.style.display = 'flex';
+                actions.style.flexWrap = 'wrap';
+                actions.style.gap = '6px';
+                const share = document.createElement('button');
+                share.className = 'btn btn-secondary';
+                share.textContent = 'Compartir';
+                share.onclick = () => shareSavedCollection(collection.id);
+                const download = document.createElement('button');
+                download.className = 'btn btn-secondary';
+                download.textContent = 'Descargar';
+                download.onclick = () => downloadSavedCollection(collection.id);
+                const remove = document.createElement('button');
+                remove.className = 'btn btn-secondary';
+                remove.textContent = 'Eliminar';
+                remove.setAttribute('aria-label', `Eliminar ${collection.name || 'colección'}`);
+                remove.onclick = () => deleteSavedCollection(collection.id);
+                actions.append(share, download, remove);
+                row.append(info, actions);
+                container.appendChild(row);
+            });
+        }
+
+        function deleteSavedCollection(collectionId) {
+            appState.savedCollections = appState.savedCollections.filter(collection => collection.id !== collectionId);
+            saveData();
+            renderSavedCollections();
+            showToast('Colección eliminada.');
         }
 
         function openManageLibrary() {
@@ -2555,38 +2778,160 @@ const APP_VERSION = '1.0.1';
             if(tab === 'presets') renderPresetModal();
         }
 
-        function shareCollection(){
-            if(!appState.customBooks.length){showToast('Añade al menos un recurso personalizado antes de compartir.');return;}
-            const shareData={
-                name: document.getElementById('collection-name-input').value.trim()||'Colección compartida',
-                type: 'collection',
-                resources: appState.customBooks.map(b=>({
-                    title: b.title,
-                    url: b.url,
-                    description: b.description,
-                    tags: b.tags,
-                    logo: b.logo,
-                    logoSquare: b.logoSquare,
-                    iconType: b.iconType,
-                    iconValue: b.iconValue,
-                    color: b.color,
-                    target: b.target
-                }))
-            };
-            const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(shareData))));
-            pendingShareUrl=`${location.origin}${location.pathname}#share=${encoded}`;
-            pendingCollectionShare=true;
-            document.getElementById('confirm-collection-share-btn').onclick=copyPendingShareUrl;
+        function openCollectionShareModal() {
+            collectionResourceItems = [...PRESET_BOOKS.map(book => ({ ...book, isDefault: true })), ...appState.customBooks]
+                .filter(book => safeSharedUrl(book.url));
+            if (!collectionResourceItems.length) {
+                showToast('No hay accesos disponibles para incluir en una colección.');
+                return;
+            }
+            document.getElementById('collection-name-input').value = 'Mi colección';
+            document.getElementById('collection-description-input').value = '';
+            document.getElementById('collection-share-url-fallback').style.display = 'none';
+            pendingCollectionSaved = false;
+            const container = document.getElementById('collection-share-items');
+            container.innerHTML = collectionResourceItems.map((item, index) => `
+                <label class="airdrop-item selected" style="animation-delay:${Math.min(index * 40, 400)}ms">
+                    <input class="airdrop-item-input collection-resource-checkbox" type="checkbox" checked data-index="${index}" onchange="updateCollectionSelection()" aria-label="Incluir ${escapeHtml(item.title || 'Recurso')}">
+                    <span class="airdrop-item-check" aria-hidden="true"><i data-lucide="check" size="14"></i></span>
+                    <span class="airdrop-item-icon">${getSharedItemIconHtml(item)}</span>
+                    <span class="airdrop-item-info">
+                        <span class="airdrop-item-title">${escapeHtml(item.title || 'Recurso sin título')}</span>
+                        <span class="airdrop-item-desc">${escapeHtml(item.description || item.url || 'Sin descripción')}</span>
+                    </span>
+                </label>
+            `).join('');
+            updateCollectionSelection();
             openModal('collection-share-info-modal');
+            lucide.createIcons();
+        }
+
+        function updateCollectionSelection() {
+            const checkboxes = [...document.querySelectorAll('.collection-resource-checkbox')];
+            checkboxes.forEach(input => input.closest('.airdrop-item').classList.toggle('selected', input.checked));
+            const count = checkboxes.filter(input => input.checked).length;
+            document.getElementById('collection-selection-count').textContent = `${count} de ${checkboxes.length} seleccionados`;
+        }
+
+        function selectCollectionResources(selected) {
+            document.querySelectorAll('.collection-resource-checkbox').forEach(input => { input.checked = selected; });
+            updateCollectionSelection();
+        }
+
+        function serializeResource(book) {
+            return {
+                title: book.title,
+                url: book.url,
+                description: book.description || '',
+                tags: Array.isArray(book.tags) ? book.tags : [],
+                logo: book.logo || '',
+                logoSquare: book.logoSquare || '',
+                iconType: book.iconType || 'url',
+                iconValue: book.iconValue || '',
+                color: book.color || '#ff453a',
+                target: book.target || '_blank'
+            };
+        }
+
+        function shareCollection() {
+            if (pendingCollectionSaved) {
+                copyPendingShareUrl();
+                return;
+            }
+            const name = document.getElementById('collection-name-input').value.trim();
+            const description = document.getElementById('collection-description-input').value.trim();
+            const selectedIndexes = [...document.querySelectorAll('.collection-resource-checkbox:checked')]
+                .map(input => Number(input.dataset.index));
+            const resources = selectedIndexes.map(index => collectionResourceItems[index]).filter(Boolean).map(serializeResource);
+            if (!name) {
+                triggerShake(document.getElementById('collection-name-input'));
+                showToast('Escribe un nombre para la colección.');
+                return;
+            }
+            if (!resources.length) {
+                showToast('Selecciona al menos un acceso para compartir.');
+                return;
+            }
+            const collection = {
+                id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                name,
+                description,
+                resources,
+                createdAt: Date.now()
+            };
+            appState.savedCollections.unshift(collection);
+            saveData();
+            renderSavedCollections();
+            pendingCollectionSaved = true;
+            pendingCollectionShare = true;
+            pendingShareUrl = createCollectionShareUrl(collection);
+            copyPendingShareUrl();
+        }
+
+        function createCollectionShareUrl(collection) {
+            const shareData = {
+                name: collection.name,
+                description: collection.description || '',
+                type: 'collection',
+                resources: collection.resources
+            };
+            const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(shareData))));
+            return `${location.origin}${location.pathname}#share=${encoded}`;
+        }
+
+        function shareSavedCollection(collectionId) {
+            const collection = appState.savedCollections.find(item => item.id === collectionId);
+            if (!collection) {
+                showToast('No se encontró esa colección guardada.');
+                return;
+            }
+            pendingCollectionShare = true;
+            pendingShareUrl = createCollectionShareUrl(collection);
+            copyPendingShareUrl();
+        }
+
+        function downloadSavedCollection(collectionId) {
+            const collection = appState.savedCollections.find(item => item.id === collectionId);
+            if (!collection) {
+                showToast('No se encontró esa colección guardada.');
+                return;
+            }
+            downloadJsonFile(`${safeFilename(collection.name)}.json`, {
+                type: 'collection',
+                name: collection.name,
+                description: collection.description || '',
+                resources: collection.resources
+            });
+        }
+
+        function safeFilename(value) {
+            return (value || 'coleccion').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-zA-Z0-9_-]+/g, '-').replace(/^-|-$/g, '').toLowerCase() || 'coleccion';
+        }
+
+        function downloadJsonFile(filename, data) {
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.href = url;
+            downloadAnchor.download = filename;
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+            window.setTimeout(() => URL.revokeObjectURL(url), 1000);
         }
 
         function downloadSettings() {
             const exportData = {
+                backupType: 'acceso-libros-backup',
                 theme: appState.theme,
                 viewMode: appState.viewMode,
                 accent: appState.accent,
+                linkTarget: appState.linkTarget,
+                density: appState.density,
                 selectedPresets: appState.selectedPresets,
                 customBooks: appState.customBooks,
+                savedCollections: appState.savedCollections,
                 favorites: appState.favorites,
                 pinned: appState.pinned,
                 trash: appState.trash,
@@ -2595,13 +2940,7 @@ const APP_VERSION = '1.0.1';
                 showGuideButton: appState.showGuideButton
             };
 
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", "biblioteca_digital_backup.json");
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
+            downloadJsonFile('biblioteca_digital_backup.json', exportData);
         }
 
         function importDataFromFile(event) {
@@ -2611,32 +2950,101 @@ const APP_VERSION = '1.0.1';
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
-                    const importedState = JSON.parse(e.target.result);
-                    if (importedState) {
-                        appState = { ...appState, ...importedState };
-                        appState.trash = Array.isArray(appState.trash) ? appState.trash : [];
-                        appState.receivedHistory = Array.isArray(appState.receivedHistory) ? appState.receivedHistory : [];
-                        appState.favorites = appState.favorites || [];
-                        appState.pinned = appState.pinned || [];
-                        purgeExpiredTrash();
-                        saveData();
-                        applyTheme(appState.theme);
-                        applyAccent(appState.accent);
-                        setViewMode(appState.viewMode, false, false);
-                        document.getElementById('show-add-btn-input').checked = appState.showAddButton;
-                        document.getElementById('show-guide-btn-input').checked = appState.showGuideButton;
-                        toggleGuideBtnVisibility(appState.showGuideButton, false);
-                        renderApp();
-                        renderReceivedHistory();
-                        renderTrash();
-                        alert("Copia de seguridad importada correctamente.");
-                        closeActiveModal('settings-modal');
-                    }
+                    const importedData = JSON.parse(e.target.result);
+                    importDataPayload(importedData, true);
                 } catch (err) {
                     alert("Error al leer el archivo JSON. Asegúrate de que tiene un formato válido.");
+                } finally {
+                    event.target.value = '';
                 }
             };
             reader.readAsText(file);
+        }
+
+        function importPastedData() {
+            const input = document.getElementById('paste-import-input');
+            const text = input.value.trim();
+            if (!text) {
+                showToast('Pega primero un enlace o contenido JSON.');
+                return;
+            }
+            try {
+                let payloadText = text;
+                const shareIndex = payloadText.indexOf('#share=');
+                if (shareIndex !== -1) {
+                    const encoded = payloadText.slice(shareIndex + '#share='.length).split('&')[0];
+                    payloadText = decodeURIComponent(escape(atob(encoded)));
+                }
+                importDataPayload(JSON.parse(payloadText), false);
+            } catch (error) {
+                console.error('Error al importar el texto pegado', error);
+                showToast('No se pudo reconocer el contenido. Comprueba el enlace o el JSON.');
+            }
+        }
+
+        async function pasteFromClipboard() {
+            if (!navigator.clipboard?.readText) {
+                showToast('El navegador no permite leer el portapapeles. Pega el contenido en el cuadro de texto.');
+                return;
+            }
+            try {
+                document.getElementById('paste-import-input').value = await navigator.clipboard.readText();
+                importPastedData();
+            } catch (error) {
+                console.error('No se pudo leer el portapapeles', error);
+                showToast('No se pudo acceder al portapapeles. Pega el contenido manualmente.');
+            }
+        }
+
+        function importDataPayload(payload, fromFile) {
+            if (payload && Array.isArray(payload.resources)) {
+                return openSharedPayload(payload);
+            }
+            const backupKeys = ['backupType', 'theme', 'viewMode', 'selectedPresets', 'customBooks', 'favorites', 'pinned'];
+            const isBackup = payload && typeof payload === 'object'
+                && (payload.backupType === 'acceso-libros-backup' || backupKeys.some(key => Object.prototype.hasOwnProperty.call(payload, key)));
+            if (!isBackup) {
+                throw new Error('Formato JSON no reconocido.');
+            }
+            if (!fromFile && !window.confirm('El contenido parece una copia de seguridad de Acceso Libros. Se reemplazarán tus ajustes actuales. ¿Quieres continuar?')) {
+                return false;
+            }
+            applyImportedBackup(payload);
+            return true;
+        }
+
+        function applyImportedBackup(importedData) {
+            const importedState = importedData.state && typeof importedData.state === 'object' ? importedData.state : importedData;
+            const stateData = { ...importedState };
+            delete stateData.backupType;
+            appState = { ...appState, ...stateData };
+            if (appState.theme === 'mono') {
+                appState.theme = 'light';
+                appState.accent = '#333333';
+            }
+            appState.trash = Array.isArray(appState.trash) ? appState.trash : [];
+            appState.receivedHistory = Array.isArray(appState.receivedHistory) ? appState.receivedHistory : [];
+            appState.savedCollections = Array.isArray(appState.savedCollections) ? appState.savedCollections : [];
+            appState.favorites = Array.isArray(appState.favorites) ? appState.favorites : [];
+            appState.pinned = Array.isArray(appState.pinned) ? appState.pinned : [];
+            appState.customBooks = Array.isArray(appState.customBooks) ? appState.customBooks : [];
+            appState.selectedPresets = Array.isArray(appState.selectedPresets) ? appState.selectedPresets : [];
+            purgeExpiredTrash();
+            saveData();
+            applyTheme(appState.theme);
+            applyAccent(appState.accent);
+            setViewMode(appState.viewMode, false, false);
+            setDensity(appState.density || 'normal', false);
+            setLinkTarget(appState.linkTarget, false);
+            document.getElementById('show-add-btn-input').checked = appState.showAddButton !== false;
+            document.getElementById('show-guide-btn-input').checked = appState.showGuideButton !== false;
+            toggleGuideBtnVisibility(appState.showGuideButton !== false, false);
+            renderApp();
+            renderSavedCollections();
+            renderReceivedHistory();
+            renderTrash();
+            showToast('Copia de seguridad importada correctamente.');
+            if (activeModalsStack.includes('settings-modal')) closeActiveModal('settings-modal');
         }
 
         window.onload = init;

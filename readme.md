@@ -8,6 +8,16 @@ El proyecto está pensado para ser simple, rápido y completamente gestionable d
 
 ---
 
+## 📋 Novedades de la versión 1.1
+
+* El color de énfasis monocromático se puede usar junto con el tema oscuro.
+* La aplicación ocupa toda la pantalla e incorpora una preferencia para abrir accesos en la pestaña actual o en una nueva.
+* Búsqueda flotante con animaciones mejoradas y cierre mediante Escape.
+* Creación de colecciones con selección de recursos, nombre y descripción; se guardan en Ajustes para compartirlas o descargarlas.
+* Importación de colecciones mediante enlace, archivo JSON, texto pegado o portapapeles, con detección de copias de seguridad.
+* Las colecciones recibidas se guardan en Ajustes y se pueden retirar al deshacer la importación.
+* La versión actual y el historial de cambios se muestran en la aplicación.
+
 ## ✨ Características
 
 ### 📚 Biblioteca personal
@@ -22,6 +32,7 @@ El proyecto está pensado para ser simple, rápido y completamente gestionable d
 ### 🔎 Búsqueda
 * La biblioteca incluye una búsqueda integrada para encontrar rápidamente recursos por su información disponible.
 * La búsqueda funciona directamente en el navegador y no necesita ningún servicio externo.
+* La barra de búsqueda se despliega con una transición y permite cerrar la búsqueda con Escape.
 
 ### 🖼️ Distintos modos de visualización
 La biblioteca puede visualizarse de varias formas:
@@ -38,8 +49,9 @@ También se puede modificar la densidad general de la interfaz:
 GP Learn permite adaptar la interfaz a las preferencias de cada usuario:
 * Modo oscuro.
 * Modo claro.
-* Diferentes colores de acento.
+* Diferentes colores de énfasis, incluido el monocromático, independiente del tema.
 * Diferentes niveles de densidad.
+* Apertura de los accesos en una pestaña nueva o en la pestaña actual.
 * Preferencias guardadas automáticamente (se mantienen entre sesiones mediante `localStorage`).
 
 ### 🔗 Compartir recursos
@@ -49,8 +61,10 @@ Los datos del recurso se pueden codificar directamente dentro de la URL mediante
 
 Esto permite compartir:
 * Un recurso individual.
-* Colecciones de recursos.
+* Colecciones con nombre y descripción, seleccionando los recursos que se quieren incluir.
 * Información básica como nombre, descripción, etiquetas, icono, color y URL.
+
+Las colecciones creadas o recibidas se conservan en Ajustes para volver a compartirlas o descargarlas como JSON. También se pueden importar enlaces y JSON de colecciones desde un archivo, pegándolos o leyéndolos del portapapeles; las copias de seguridad se reconocen y se importan como ajustes.
 
 El sistema funciona sin un servidor intermedio: la información viaja dentro del propio enlace.
 
