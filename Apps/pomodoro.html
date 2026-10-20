@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#000000">
+    <meta name="description" content="Temporizador Pomodoro personalizable con estadísticas, sonidos y temas OLED.">
     <title>Aura Focus — Pomodoro</title>
     
     <!-- 1. Script de Inicialización Crítica (head) -->
@@ -116,7 +118,7 @@
             max-height: 600px;
             background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
             opacity: 0.12;
-            filter: blur(80px);
+            filter: none;
             transition: opacity 1s var(--bezier), background 0.5s var(--bezier);
             z-index: 0;
         }
@@ -336,8 +338,8 @@
             width: 100vw;
             height: 100vh;
             background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
             z-index: 100;
             display: flex;
             align-items: center;
@@ -471,6 +473,118 @@
                 flex: 1;
             }
         }
+
+        /* Personalización y panel de ajustes */
+        .settings-section {
+            border-top: 1px solid var(--border);
+            margin-top: 22px;
+            padding-top: 18px;
+        }
+        .settings-section-title {
+            font-size: .78rem;
+            text-transform: uppercase;
+            letter-spacing: .09em;
+            color: var(--text-muted);
+            font-weight: 700;
+            margin-bottom: 14px;
+        }
+        .settings-label {
+            display: block;
+            color: var(--text-body);
+            font-size: .9rem;
+            font-weight: 500;
+            margin: 0 0 10px;
+        }
+        .accent-picker {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+        .color-dot {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            outline: 2px solid transparent;
+            outline-offset: 3px;
+            cursor: pointer;
+            transition: transform .18s ease, outline-color .18s ease;
+        }
+        .color-dot:hover { transform: scale(1.1); }
+        .color-dot.selected { outline-color: var(--text-main); }
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin: 14px 0;
+        }
+        .setting-row .form-label { margin: 0; }
+        .setting-row .form-input { width: auto; min-width: 130px; }
+        .setting-select {
+            max-width: 180px;
+            height: 42px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: var(--bg);
+            color: var(--text-main);
+            padding: 0 10px;
+        }
+        .switch {
+            appearance: none;
+            width: 44px;
+            height: 26px;
+            border-radius: 20px;
+            background: var(--surface-hover);
+            border: 1px solid var(--border-strong);
+            position: relative;
+            cursor: pointer;
+            flex: 0 0 auto;
+        }
+        .switch::after {
+            content: "";
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            top: 2px;
+            left: 2px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            transition: transform .18s ease, background .18s ease;
+        }
+        .switch:checked { background: var(--accent); border-color: var(--accent); }
+        .switch:checked::after { transform: translateX(18px); background: white; }
+        .stats-strip {
+            display: flex;
+            justify-content: center;
+            gap: clamp(18px, 5vw, 42px);
+            color: var(--text-muted);
+            font-size: .82rem;
+            flex-wrap: wrap;
+        }
+        .stat-item strong { display: block; color: var(--text-main); font-size: 1rem; font-weight: 700; }
+        .modal-card { max-height: min(88vh, 760px); overflow-y: auto; }
+        [data-theme="oled"] {
+            --bg: #000000;
+            --surface: #050505;
+            --surface-hover: #111111;
+            --border: rgba(255,255,255,.12);
+            --border-strong: rgba(255,255,255,.2);
+            --scrollbar-track: #000;
+            --scrollbar-thumb: #333;
+            --text-main: #fff;
+            --text-muted: #999;
+            --text-body: #ddd;
+            --shadow: none;
+        }
+        @media (max-height: 700px) {
+            .main-content { gap: 16px; }
+            .timer-display { font-size: clamp(4rem, 15vh, 8rem); }
+            .app-container { padding-top: 12px; padding-bottom: 12px; }
+        }
+
     </style>
 </head>
 <body>
@@ -536,6 +650,11 @@
                     <i data-lucide="maximize-2" size="20"></i>
                 </button>
             </div>
+            <div class="stats-strip" aria-live="polite">
+                <div class="stat-item"><strong id="sessions-count">0</strong>sesiones hoy</div>
+                <div class="stat-item"><strong id="focus-minutes">0 min</strong>tiempo enfocado</div>
+                <div class="stat-item"><strong id="cycle-count">0/4</strong>ciclo actual</div>
+            </div>
         </main>
     </div>
 
@@ -565,7 +684,47 @@
                     </div>
                 </div>
             </div>
-            <button class="btn-primary" style="width: 100%; margin-top: 10px;" onclick="saveSettings()">Guardar Cambios</button>
+            <div class="settings-section">
+                <div class="settings-section-title">Apariencia</div>
+                <label class="settings-label" for="theme-select">Tema</label>
+                <select id="theme-select" class="setting-select" style="width:100%;max-width:none;margin-bottom:18px" onchange="setTheme(this.value)">
+                    <option value="dark">Oscuro</option>
+                    <option value="light">Claro</option>
+                    <option value="oled">Monocromo OLED</option>
+                    <option value="system">Automático del sistema</option>
+                </select>
+                <div class="settings-label">Color de Énfasis</div>
+                <div class="accent-picker" role="group" aria-label="Color de énfasis">
+                    <button type="button" class="color-dot" style="background:#ff453a" aria-label="Rojo coral" title="Rojo coral" onclick="setAccent('#ff453a')"></button>
+                    <button type="button" class="color-dot" style="background:#007aff" aria-label="Azul" title="Azul" onclick="setAccent('#007aff')"></button>
+                    <button type="button" class="color-dot" style="background:#34c759" aria-label="Verde" title="Verde" onclick="setAccent('#34c759')"></button>
+                    <button type="button" class="color-dot" style="background:#af52de" aria-label="Violeta" title="Violeta" onclick="setAccent('#af52de')"></button>
+                    <button type="button" class="color-dot" style="background:#ff9500" aria-label="Naranja" title="Naranja" onclick="setAccent('#ff9500')"></button>
+                    <button type="button" class="color-dot" style="background:#ffffff" aria-label="Blanco" title="Blanco" onclick="setAccent('#ffffff')"></button>
+                </div>
+                <div class="setting-row">
+                    <label class="form-label" for="auto-break">Iniciar descanso automáticamente</label>
+                    <input id="auto-break" class="switch" type="checkbox">
+                </div>
+                <div class="setting-row">
+                    <label class="form-label" for="auto-work">Iniciar enfoque automáticamente</label>
+                    <input id="auto-work" class="switch" type="checkbox">
+                </div>
+                <div class="setting-row">
+                    <label class="form-label" for="long-cycle">Sesiones antes del descanso largo</label>
+                    <select id="long-cycle" class="setting-select">
+                        <option value="2">2 sesiones</option><option value="3">3 sesiones</option>
+                        <option value="4" selected>4 sesiones</option><option value="5">5 sesiones</option>
+                        <option value="6">6 sesiones</option>
+                    </select>
+                </div>
+                <div class="setting-row">
+                    <label class="form-label" for="tick-sound">Aviso al terminar</label>
+                    <input id="tick-sound" class="switch" type="checkbox" checked>
+                </div>
+            </div>
+            <button class="btn-primary" style="width: 100%; margin-top: 18px;" onclick="saveSettings()">Guardar cambios</button>
+            <button class="btn-secondary" style="width:100%;height:46px;border-radius:14px;margin-top:10px" onclick="resetPreferences()">Restablecer personalización</button>
         </div>
     </div>
 
@@ -607,6 +766,8 @@
         let timerId = null;
         let currentTask = '';
         let noiseActive = false;
+        let preferences = { theme: 'oled', accent: '#ff453a', autoBreak: false, autoWork: false, longCycle: 4, sound: true };
+        let dailyStats = { date: new Date().toLocaleDateString(), sessions: 0, focusMinutes: 0, completedWorkSessions: 0 };
 
         // Web Audio API para Sonidos Sintetizados Nativos (Zero externas)
         let audioCtx = null;
@@ -617,7 +778,13 @@
             lucide.createIcons();
             checkUrlShareData();
             loadState();
+            loadPreferences();
+            try {
+                currentTask = localStorage.getItem('aura_pomodoro_task') || '';
+                if (currentTask) document.getElementById('current-task-label').textContent = currentTask;
+            } catch (_) {}
             updateDisplay();
+            updateStats();
         });
 
         // --- Motor del Temporizador ---
@@ -681,6 +848,8 @@
             
             document.getElementById('timer-display').textContent = formatted;
             document.title = `${formatted} — ${currentMode === 'work' ? 'Enfoque' : 'Descanso'}`;
+            const progress = document.querySelector('meta[name="theme-color"]');
+            if (progress) progress.content = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
 
             // Actualización del Fondo como Progress Bar
             const percentage = ((totalTime - timeLeft) / totalTime) * 100;
@@ -704,6 +873,7 @@
             const val = document.getElementById('task-input').value.trim();
             currentTask = val;
             document.getElementById('current-task-label').textContent = val || 'Seleccionar o escribir tarea...';
+            try { localStorage.setItem('aura_pomodoro_task', currentTask); } catch (_) {}
             closeModal('task-modal');
         }
 
@@ -713,11 +883,85 @@
             const s = parseInt(document.getElementById('input-short').value) || 5;
             const l = parseInt(document.getElementById('input-long').value) || 15;
 
-            config = { work: w, shortBreak: s, longBreak: l };
+            config = { work: Math.min(120, Math.max(1, w)), shortBreak: Math.min(60, Math.max(1, s)), longBreak: Math.min(60, Math.max(1, l)) };
+            preferences.autoBreak = document.getElementById('auto-break').checked;
+            preferences.autoWork = document.getElementById('auto-work').checked;
+            preferences.longCycle = Number(document.getElementById('long-cycle').value || 4);
+            preferences.sound = document.getElementById('tick-sound').checked;
+            savePreferences();
             saveState();
             closeModal('settings-modal');
             resetTimer();
             showToast("Ajustes guardados");
+        }
+
+
+        // --- Personalización, preferencias y estadísticas ---
+        function setAccent(color) {
+            preferences.accent = color;
+            document.documentElement.style.setProperty('--accent', color);
+            document.querySelectorAll('.color-dot').forEach(dot => {
+                dot.classList.toggle('selected', dot.getAttribute('onclick')?.includes(color));
+                dot.setAttribute('aria-pressed', String(dot.getAttribute('onclick')?.includes(color) || false));
+            });
+            savePreferences();
+        }
+
+        function setTheme(theme) {
+            if (theme === 'system') {
+                theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                preferences.theme = 'system';
+            } else {
+                preferences.theme = theme;
+            }
+            document.documentElement.dataset.theme = theme;
+            savePreferences();
+        }
+
+        function savePreferences() {
+            try { localStorage.setItem('aura_pomodoro_preferences', JSON.stringify(preferences)); } catch (_) {}
+        }
+
+        function loadPreferences() {
+            try {
+                const stored = JSON.parse(localStorage.getItem('aura_pomodoro_preferences') || 'null');
+                if (stored) preferences = { ...preferences, ...stored };
+                const theme = preferences.theme === 'system'
+                    ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+                    : preferences.theme;
+                document.documentElement.dataset.theme = theme;
+                document.documentElement.style.setProperty('--accent', preferences.accent || '#ff453a');
+                document.getElementById('theme-select').value = preferences.theme;
+                document.getElementById('auto-break').checked = !!preferences.autoBreak;
+                document.getElementById('auto-work').checked = !!preferences.autoWork;
+                document.getElementById('long-cycle').value = String(preferences.longCycle || 4);
+                document.getElementById('tick-sound').checked = preferences.sound !== false;
+                setAccent(preferences.accent || '#ff453a');
+            } catch (_) {}
+        }
+
+        function resetPreferences() {
+            preferences = { theme: 'oled', accent: '#ff453a', autoBreak: false, autoWork: false, longCycle: 4, sound: true };
+            savePreferences();
+            loadPreferences();
+            showToast('Personalización restablecida');
+        }
+
+        function saveStats() {
+            try { localStorage.setItem('aura_pomodoro_stats', JSON.stringify(dailyStats)); } catch (_) {}
+        }
+
+        function updateStats() {
+            try {
+                const stored = JSON.parse(localStorage.getItem('aura_pomodoro_stats') || 'null');
+                const today = new Date().toLocaleDateString();
+                dailyStats = stored && stored.date === today
+                    ? stored
+                    : { date: today, sessions: 0, focusMinutes: 0, completedWorkSessions: stored?.completedWorkSessions || 0 };
+                document.getElementById('sessions-count').textContent = dailyStats.sessions;
+                document.getElementById('focus-minutes').textContent = `${dailyStats.focusMinutes} min`;
+                document.getElementById('cycle-count').textContent = `${(dailyStats.completedWorkSessions % Number(preferences.longCycle || 4)) || (dailyStats.completedWorkSessions ? Number(preferences.longCycle || 4) : 0)}/${preferences.longCycle || 4}`;
+            } catch (_) {}
         }
 
         function openModal(id) {
@@ -729,15 +973,32 @@
             document.getElementById(id).classList.remove('open');
         }
 
-        window.addEventListener('popstate', (e) => {
+        window.addEventListener('popstate', () => {
             document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+        });
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', event => {
+                if (event.target === overlay) closeModal(overlay.id);
+            });
+        });
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape') document.querySelectorAll('.modal-overlay.open').forEach(m => closeModal(m.id));
+            if (event.code === 'Space' && !['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(document.activeElement.tagName)) {
+                event.preventDefault(); toggleTimer();
+            }
+            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === ',') {
+                event.preventDefault(); openModal('settings-modal');
+            }
         });
 
         // --- Sistema de Audio Sintetizado (Satin/Chime + Brown Noise) ---
         function initAudio() {
             if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContextClass) { showToast('Audio no disponible en este navegador'); return; }
+                audioCtx = new AudioContextClass();
             }
+            if (audioCtx.state === 'suspended') audioCtx.resume();
         }
 
         function playChimeSound() {
