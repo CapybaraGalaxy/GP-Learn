@@ -7,7 +7,9 @@ const ASSETS_TO_CACHE = [
   './Apps/pomodoro.html',
   './assets/js/lucide.min.js',
   './Media/consejos.html',
-  './Media/preset-editor.html',
+  './Media/icon-consejos.png',
+ './Media/icon-pomodoro.png',
+'./Media/preset-editor.html',
   './favicon-light.png', // Tu PNG para tema claro
   './favicon-dark.png'   // Tu PNG para tema oscuro
 ];
