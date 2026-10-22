@@ -1,3 +1,4 @@
+https://capsule-render.vercel.app/api?text=GP LEARN&animation=fadeIn&type=waving&color=gradient&height=100
 # GP Learn
 
 **GP Learn** es una biblioteca digital personal para reunir en un mismo lugar libros, bibliotecas digitales, recursos educativos y otras herramientas útiles para estudiantes y lectores.
